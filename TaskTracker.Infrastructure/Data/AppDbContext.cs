@@ -1,11 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TaskTracker.Models;
+using TaskTracker.Domain.Entities;
 
-namespace TaskTracker.Data
+namespace TaskTracker.Infrastructure.Data
 {
     public class AppDbContext : DbContext
     {
-        // Конструктор, принимающий DbContextOptions (ВАЖНО!)
         public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options)
         {
@@ -20,11 +19,9 @@ namespace TaskTracker.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Составной ключ для TaskTag
             modelBuilder.Entity<TaskTag>()
                 .HasKey(tt => new { tt.TaskId, tt.TagId });
 
-            // Уникальный Email
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();

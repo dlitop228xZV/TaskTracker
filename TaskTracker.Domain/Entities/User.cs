@@ -1,4 +1,4 @@
-﻿namespace TaskTracker.Models
+﻿namespace TaskTracker.Domain.Entities
 {
     public class User
     {
@@ -6,6 +6,6 @@
         public string Name { get; set; }
         public string Email { get; set; }
 
-        public List<TaskItem> Tasks { get; set; } = new();  // ← TaskItem вместо Task
+        public List<TaskItem> Tasks { get; set; } = new();
     }
 }

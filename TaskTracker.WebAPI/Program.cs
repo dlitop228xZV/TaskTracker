@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using TaskTracker.Data;
-using TaskTracker.Models;
+using TaskTracker.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Настройка DbContext (ВАЖНО!)
+// Add services
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=tasktracker.db"));
 
@@ -14,6 +13,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Configure pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -24,33 +24,13 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-// Создание БД
+// Create database
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 
-    // Заполняем начальными данными
-    if (!db.Tags.Any())
-    {
-        db.Tags.AddRange(
-            new Tag { Name = "bug" },
-            new Tag { Name = "feature" },
-            new Tag { Name = "refactor" },
-            new Tag { Name = "docs" }
-        );
-
-        if (!db.Users.Any())
-        {
-            db.Users.Add(new User
-            {
-                Name = "Иванов И.И.",
-                Email = "ivanov@example.com"
-            });
-        }
-
-        db.SaveChanges();
-    }
+    // Seed data...
 }
 
 app.Run();

@@ -1,4 +1,4 @@
-﻿namespace TaskTracker.Models
+﻿namespace TaskTracker.Domain.Entities
 {
     public class TaskTag
     {

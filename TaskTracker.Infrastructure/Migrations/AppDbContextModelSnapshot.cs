@@ -3,11 +3,11 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TaskTracker.Data;
+using TaskTracker.Infrastructure.Data;
 
 #nullable disable
 
-namespace TaskTracker.Migrations
+namespace TaskTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -17,7 +17,7 @@ namespace TaskTracker.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
 
-            modelBuilder.Entity("TaskTracker.Models.Tag", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.Tag", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -32,7 +32,7 @@ namespace TaskTracker.Migrations
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("TaskTracker.Models.TaskItem", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.TaskItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -73,7 +73,7 @@ namespace TaskTracker.Migrations
                     b.ToTable("Tasks");
                 });
 
-            modelBuilder.Entity("TaskTracker.Models.TaskTag", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.TaskTag", b =>
                 {
                     b.Property<int>("TaskId")
                         .HasColumnType("INTEGER");
@@ -88,7 +88,7 @@ namespace TaskTracker.Migrations
                     b.ToTable("TaskTags");
                 });
 
-            modelBuilder.Entity("TaskTracker.Models.User", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -110,9 +110,9 @@ namespace TaskTracker.Migrations
                     b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("TaskTracker.Models.TaskItem", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.TaskItem", b =>
                 {
-                    b.HasOne("TaskTracker.Models.User", "Assignee")
+                    b.HasOne("TaskTracker.Domain.Entities.User", "Assignee")
                         .WithMany("Tasks")
                         .HasForeignKey("AssigneeId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -121,15 +121,15 @@ namespace TaskTracker.Migrations
                     b.Navigation("Assignee");
                 });
 
-            modelBuilder.Entity("TaskTracker.Models.TaskTag", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.TaskTag", b =>
                 {
-                    b.HasOne("TaskTracker.Models.Tag", "Tag")
+                    b.HasOne("TaskTracker.Domain.Entities.Tag", "Tag")
                         .WithMany("TaskTags")
                         .HasForeignKey("TagId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("TaskTracker.Models.TaskItem", "Task")
+                    b.HasOne("TaskTracker.Domain.Entities.TaskItem", "Task")
                         .WithMany("TaskTags")
                         .HasForeignKey("TaskId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -140,17 +140,17 @@ namespace TaskTracker.Migrations
                     b.Navigation("Task");
                 });
 
-            modelBuilder.Entity("TaskTracker.Models.Tag", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.Tag", b =>
                 {
                     b.Navigation("TaskTags");
                 });
 
-            modelBuilder.Entity("TaskTracker.Models.TaskItem", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.TaskItem", b =>
                 {
                     b.Navigation("TaskTags");
                 });
 
-            modelBuilder.Entity("TaskTracker.Models.User", b =>
+            modelBuilder.Entity("TaskTracker.Domain.Entities.User", b =>
                 {
                     b.Navigation("Tasks");
                 });

@@ -1,6 +1,4 @@
-﻿using TaskTracker.Models;
-
-namespace TaskTracker.Models
+﻿namespace TaskTracker.Domain.Entities
 {
     public class Tag
     {

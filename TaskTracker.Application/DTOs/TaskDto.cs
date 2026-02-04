@@ -1,0 +1,40 @@
+﻿using TaskTracker.Domain.Entities;
+
+namespace TaskTracker.Application.DTOs
+{
+    public class TaskDto
+    {
+        public int Id { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public int AssigneeId { get; set; }
+        public string AssigneeName { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public DateTime DueDate { get; set; }
+        public DateTime? CompletedAt { get; set; }
+        public string Status { get; set; }
+        public int Priority { get; set; }
+        public bool IsOverdue { get; set; }
+        public List<string> Tags { get; set; } = new();
+
+        // Можно добавить метод для преобразования из сущности
+        public static TaskDto FromEntity(TaskItem task)
+        {
+            return new TaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                AssigneeId = task.AssigneeId,
+                AssigneeName = task.Assignee?.Name,
+                CreatedAt = task.CreatedAt,
+                DueDate = task.DueDate,
+                CompletedAt = task.CompletedAt,
+                Status = task.Status,
+                Priority = task.Priority,
+                IsOverdue = task.IsOverdue,
+                Tags = task.TaskTags?.Select(tt => tt.Tag.Name).ToList() ?? new()
+            };
+        }
+    }
+}

@@ -7,6 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\ReportsController.cs" />
+    <Compile Remove="Controllers\TasksController.cs" />
+    <Compile Remove="Controllers\UsersController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Controllers\ReportsController.cs" />
+    <None Include="Controllers\TasksController.cs" />
+    <None Include="Controllers\UsersController.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.14" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

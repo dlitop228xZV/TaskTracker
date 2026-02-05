@@ -17,7 +17,6 @@ namespace TaskTracker.Application.DTOs
         public bool IsOverdue { get; set; }
         public List<string> Tags { get; set; } = new();
 
-        // Можно добавить метод для преобразования из сущности
         public static TaskDto FromEntity(TaskItem task)
         {
             return new TaskDto

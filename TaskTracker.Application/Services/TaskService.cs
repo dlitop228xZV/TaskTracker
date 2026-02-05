@@ -7,7 +7,7 @@ namespace TaskTracker.Application.Services
 {
     public class TaskService : ITaskService
     {
-        private List<TaskItem> _tasks = new();  // временно в памяти
+        private List<TaskItem> _tasks = new();  // Временно в памяти
 
         public Task<TaskItem> GetTaskByIdAsync(int id)
         {

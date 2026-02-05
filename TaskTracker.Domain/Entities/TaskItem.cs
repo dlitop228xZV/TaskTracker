@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace TaskTracker.Domain.Entities  // ← пространство имён должно быть TaskTracker.Models
+namespace TaskTracker.Domain.Entities
 {
-    public class TaskItem  // ← переименовали из Task в TaskItem
+    public class TaskItem
     {
         public int Id { get; set; }
 

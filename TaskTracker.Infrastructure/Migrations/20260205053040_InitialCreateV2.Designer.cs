@@ -11,8 +11,8 @@ using TaskTracker.Infrastructure.Data;
 namespace TaskTracker.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260204033954_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260205053040_InitialCreateV2")]
+    partial class InitialCreateV2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -57,8 +57,9 @@ namespace TaskTracker.Infrastructure.Migrations
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Priority")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
                         .IsRequired()

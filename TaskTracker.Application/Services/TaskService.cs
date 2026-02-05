@@ -1,6 +1,7 @@
 ﻿using TaskTracker.Application.DTOs;
 using TaskTracker.Application.Interfaces;
 using TaskTracker.Domain.Entities;
+using TaskTracker.Domain.Enums;
 using TaskTracker.Domain.Interfaces;
 
 namespace TaskTracker.Application.Services
@@ -31,7 +32,7 @@ namespace TaskTracker.Application.Services
                 AssigneeId = createDto.AssigneeId,
                 DueDate = createDto.DueDate,
                 Priority = createDto.Priority,
-                Status = "New",
+                Status = TaskItemStatus.New,
                 CreatedAt = DateTime.UtcNow
             };
 

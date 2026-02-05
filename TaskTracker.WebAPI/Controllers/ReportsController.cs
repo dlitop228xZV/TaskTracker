@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskTracker.Application.DTOs;
+using TaskTracker.Domain.Enums;
 using TaskTracker.Infrastructure.Data;
 
 namespace TaskTracker.WebAPI.Controllers
@@ -22,11 +23,11 @@ namespace TaskTracker.WebAPI.Controllers
         {
             var summary = new
             {
-                New = await _context.Tasks.CountAsync(t => t.Status == "New"),
-                InProgress = await _context.Tasks.CountAsync(t => t.Status == "InProgress"),
-                Done = await _context.Tasks.CountAsync(t => t.Status == "Done"),
+                New = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.New),
+                InProgress = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.InProgress),
+                Done = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.Done),
                 Overdue = await _context.Tasks.CountAsync(t =>
-                    t.Status != "Done" && t.DueDate.Date < DateTime.UtcNow.Date)
+                    t.Status != TaskItemStatus.Done && t.DueDate.Date < DateTime.UtcNow.Date)
             };
 
             return Ok(summary);

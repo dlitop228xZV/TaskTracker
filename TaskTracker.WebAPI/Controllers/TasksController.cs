@@ -130,11 +130,11 @@ namespace TaskTracker.WebAPI.Controllers
         [SwaggerOperation(Summary = "Фильтрация задач", Description = "Возвращает задачи с применением фильтров")]
         [SwaggerResponse(200, "Успешный запрос", typeof(List<TaskDto>))]
         public async Task<IActionResult> GetFilteredTasks(
-            [FromQuery] string status = null,
+            [FromQuery] string status = default,
             [FromQuery] int? assigneeId = null,
             [FromQuery] DateTime? dueBefore = null,
             [FromQuery] DateTime? dueAfter = null,
-            [FromQuery] List<int> tagId = null)
+            [FromQuery] List<int> tagId = default)
         {
             var tasks = await _taskService.GetFilteredTasksAsync(status, assigneeId, dueBefore, dueAfter, tagId);
             return Ok(tasks);

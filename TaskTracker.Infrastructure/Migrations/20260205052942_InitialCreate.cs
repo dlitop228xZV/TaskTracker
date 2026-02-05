@@ -51,7 +51,7 @@ namespace TaskTracker.Infrastructure.Migrations
                     DueDate = table.Column<DateTime>(type: "TEXT", nullable: false),
                     CompletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     Status = table.Column<string>(type: "TEXT", nullable: false),
-                    Priority = table.Column<int>(type: "INTEGER", nullable: false)
+                    Priority = table.Column<string>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
                 {

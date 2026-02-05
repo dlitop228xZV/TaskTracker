@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TaskTracker.Domain.Enums;
 
 namespace TaskTracker.Application.DTOs
 {
@@ -17,8 +18,7 @@ namespace TaskTracker.Application.DTOs
         [Required]
         public DateTime DueDate { get; set; }
 
-        [Range(1, 3)]
-        public int Priority { get; set; } = 2;
+        public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
         public List<int> TagIds { get; set; } = new();
     }

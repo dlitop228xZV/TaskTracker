@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskTracker.Domain.Entities;
+using TaskTracker.Domain.Enums;
 
 namespace TaskTracker.Infrastructure.Data
 {
@@ -19,12 +20,23 @@ namespace TaskTracker.Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Составной ключ
             modelBuilder.Entity<TaskTag>()
                 .HasKey(tt => new { tt.TaskId, tt.TagId });
 
+            // Уникальный Email
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            // Конфигурация enum'ов - хранить как строки в БД
+            modelBuilder.Entity<TaskItem>()
+                .Property(t => t.Status)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<TaskItem>()
+                .Property(t => t.Priority)
+                .HasConversion<string>();
         }
     }
 }

@@ -13,7 +13,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 // Register application services
 builder.Services.AddScoped<ITaskService, TaskService>();
 // Добавим позже: builder.Services.AddScoped<IUserService, UserService>();
-// Добавим позже: builder.Services.AddScoped<IReportService, ReportService>();
+// Добавим позже: builder.Services.AddScoped<IReportService, ReportService>(); `
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

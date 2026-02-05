@@ -1,6 +1,7 @@
 ﻿using TaskTracker.Application.DTOs;
 using TaskTracker.Application.Interfaces;
 using TaskTracker.Domain.Entities;
+using TaskTracker.Domain.Interfaces;
 
 namespace TaskTracker.Application.Services
 {

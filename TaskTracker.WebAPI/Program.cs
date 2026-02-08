@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskTracker.Application.Interfaces;
 using TaskTracker.Application.Services;
+using TaskTracker.Domain.Interfaces;
 using TaskTracker.Infrastructure.Data;
+using TaskTracker.Infrastructure.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,7 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=tasktracker.db"));
 
-// Register services (пока без репозиториев, используем прямую работу с DbContext)
+// Register Repository (ВАЖНО!)
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+
+// Register Services
 builder.Services.AddScoped<ITaskService, TaskService>();
 
 builder.Services.AddControllers();

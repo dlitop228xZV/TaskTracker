@@ -1,52 +1,95 @@
 ﻿using TaskTracker.Application.DTOs;
 using TaskTracker.Application.Interfaces;
 using TaskTracker.Domain.Entities;
+using TaskTracker.Domain.Enums;
+using TaskTracker.Domain.Interfaces;
 
 namespace TaskTracker.Application.Services
 {
     public class TaskService : ITaskService
     {
-        private List<TaskItem> _tasks = new();  // временно в памяти
+        private readonly ITaskRepository _taskRepository;
 
-        public Task<TaskItem> GetTaskByIdAsync(int id)
+        public TaskService(ITaskRepository taskRepository)
         {
-            var task = _tasks.FirstOrDefault(t => t.Id == id);
-            return Task.FromResult(task);
+            _taskRepository = taskRepository;
         }
 
-        public Task<List<TaskDto>> GetAllTasksAsync()
+        public async Task<TaskItem> GetTaskByIdAsync(int id)
         {
-            var dtos = _tasks.Select(t => TaskDto.FromEntity(t)).ToList();
-            return Task.FromResult(dtos);
+            // Репозиторий должен сам делать Include
+            return await _taskRepository.GetByIdAsync(id);
         }
 
-        public Task<TaskItem> CreateTaskAsync(CreateTaskDto createDto)
+        public async Task<List<TaskDto>> GetAllTasksAsync()
+        {
+            var tasks = await _taskRepository.GetAllAsync();
+            return tasks.Select(TaskDto.FromEntity).ToList();
+        }
+
+        public async Task<TaskItem> CreateTaskAsync(CreateTaskDto createDto)
         {
             var task = new TaskItem
             {
-                Id = _tasks.Count + 1,
                 Title = createDto.Title,
-                Description = createDto.Description,
+                Description = createDto.Description ?? "",
                 AssigneeId = createDto.AssigneeId,
                 DueDate = createDto.DueDate,
                 Priority = createDto.Priority,
-                Status = "New",
+                Status = TaskItemStatus.New,
                 CreatedAt = DateTime.UtcNow
             };
 
-            _tasks.Add(task);
-            return Task.FromResult(task);
+            // Пока без тегов, добавим позже
+            return await _taskRepository.AddAsync(task);
         }
 
         // Остальные методы - заглушки
         public Task<List<TaskDto>> GetFilteredTasksAsync(string status = null, int? assigneeId = null, DateTime? dueBefore = null, DateTime? dueAfter = null, List<int> tagIds = null)
             => Task.FromResult(new List<TaskDto>());
 
-        public Task<TaskItem> UpdateTaskAsync(int id, UpdateTaskDto updateDto)
-            => Task.FromResult<TaskItem>(null);
+        public async Task<TaskItem> UpdateTaskAsync(int id, UpdateTaskDto updateDto)
+        {
+            // Найти задачу, обновить, сохранить
+            var task = await _taskRepository.GetByIdAsync(id);
+            if (task == null) return null;
 
-        public Task<bool> DeleteTaskAsync(int id)
-            => Task.FromResult(true);
+            if (!string.IsNullOrEmpty(updateDto.Title))
+                task.Title = updateDto.Title;
+
+            if (!string.IsNullOrEmpty(updateDto.Description))
+                task.Description = updateDto.Description;
+
+            if (updateDto.AssigneeId.HasValue)
+                task.AssigneeId = updateDto.AssigneeId.Value;
+
+            if (updateDto.DueDate.HasValue)
+                task.DueDate = updateDto.DueDate.Value;
+
+            if (!string.IsNullOrEmpty(updateDto.Status))
+            {
+                if (Enum.TryParse<TaskItemStatus>(updateDto.Status, out var statusEnum))
+                    task.Status = statusEnum;
+            }
+
+            if (updateDto.Priority.HasValue)
+            {
+                if (Enum.TryParse<TaskPriority>(updateDto.Priority.ToString(), out var priorityEnum))
+                    task.Priority = priorityEnum;
+            }
+
+            await _taskRepository.UpdateAsync(task);
+            return task;
+        }
+
+        public async Task<bool> DeleteTaskAsync(int id)
+        {
+            var task = await _taskRepository.GetByIdAsync(id);
+            if (task == null) return false;
+
+            await _taskRepository.DeleteAsync(id);
+            return true;
+        }
 
         public Task<bool> ChangeTaskStatusAsync(int taskId, string newStatus)
             => Task.FromResult(true);

@@ -1,8 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskTracker.Application.Interfaces;
 using TaskTracker.Application.Services;
-using TaskTracker.Domain.Entities;
+using TaskTracker.Domain.Interfaces;
 using TaskTracker.Infrastructure.Data;
+using TaskTracker.Infrastructure.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,10 +11,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=tasktracker.db"));
 
-// Register application services
+// Register Repository (ВАЖНО!)
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+
+// Register Services
 builder.Services.AddScoped<ITaskService, TaskService>();
-// Добавим позже: builder.Services.AddScoped<IUserService, UserService>();
-// Добавим позже: builder.Services.AddScoped<IReportService, ReportService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -40,15 +42,15 @@ using (var scope = app.Services.CreateScope())
     if (!db.Tags.Any())
     {
         db.Tags.AddRange(
-            new Tag { Name = "bug" },
-            new Tag { Name = "feature" },
-            new Tag { Name = "refactor" },
-            new Tag { Name = "docs" }
+            new TaskTracker.Domain.Entities.Tag { Name = "bug" },
+            new TaskTracker.Domain.Entities.Tag { Name = "feature" },
+            new TaskTracker.Domain.Entities.Tag { Name = "refactor" },
+            new TaskTracker.Domain.Entities.Tag { Name = "docs" }
         );
 
         if (!db.Users.Any())
         {
-            db.Users.Add(new User
+            db.Users.Add(new TaskTracker.Domain.Entities.User
             {
                 Name = "Иванов И.И.",
                 Email = "ivanov@example.com"

@@ -1,4 +1,5 @@
 ﻿using TaskTracker.Domain.Entities;
+using TaskTracker.Domain.Enums;
 
 namespace TaskTracker.Application.DTOs
 {
@@ -12,12 +13,11 @@ namespace TaskTracker.Application.DTOs
         public DateTime CreatedAt { get; set; }
         public DateTime DueDate { get; set; }
         public DateTime? CompletedAt { get; set; }
-        public string Status { get; set; }
-        public int Priority { get; set; }
+        public TaskItemStatus Status { get; set; }
+        public TaskPriority Priority { get; set; }
         public bool IsOverdue { get; set; }
         public List<string> Tags { get; set; } = new();
 
-        // Можно добавить метод для преобразования из сущности
         public static TaskDto FromEntity(TaskItem task)
         {
             return new TaskDto

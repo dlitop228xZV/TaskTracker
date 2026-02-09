@@ -1,8 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using TaskTracker.Domain.Enums;
 
-namespace TaskTracker.Domain.Entities  // ← пространство имён должно быть TaskTracker.Models
+namespace TaskTracker.Domain.Entities
 {
-    public class TaskItem  // ← переименовали из Task в TaskItem
+    public class TaskItem
     {
         public int Id { get; set; }
 
@@ -21,14 +22,14 @@ namespace TaskTracker.Domain.Entities  // ← пространство имён 
 
         public DateTime? CompletedAt { get; set; }
 
-        public string Status { get; set; } = "New";
+        public TaskItemStatus Status { get; set; } = TaskItemStatus.New;
 
-        public int Priority { get; set; } = 2;
+        public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
         public User Assignee { get; set; }
         public List<TaskTag> TaskTags { get; set; } = new();
 
         public bool IsOverdue =>
-            Status != "Done" && DueDate.Date < DateTime.UtcNow.Date;
+            Status != TaskItemStatus.Done && DueDate.Date < DateTime.UtcNow.Date;
     }
 }

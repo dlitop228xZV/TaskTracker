@@ -39,9 +39,34 @@ namespace TaskTracker.Infrastructure.Data.Repositories
             return entity;
         }
 
-        // Остальные методы пока заглушки
-        public Task UpdateAsync(TaskItem entity) => throw new NotImplementedException();
-        public Task DeleteAsync(int id) => throw new NotImplementedException();
-        public Task<List<TaskItem>> GetFilteredAsync(string status = null, int? assigneeId = null, DateTime? dueBefore = null, DateTime? dueAfter = null, List<int> tagIds = null) => throw new NotImplementedException();
+        public async Task UpdateAsync(TaskItem entity)
+        {
+            _context.Entry(entity).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(int id)
+        {
+            var task = await GetByIdAsync(id);
+            if (task != null)
+            {
+                // Удаляем связи с тегами
+                var taskTags = await _context.TaskTags
+                    .Where(tt => tt.TaskId == id)
+                    .ToListAsync();
+                _context.TaskTags.RemoveRange(taskTags);
+
+                _context.Tasks.Remove(task);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public Task<List<TaskItem>> GetFilteredAsync(
+            string status = null,
+            int? assigneeId = null,
+            DateTime? dueBefore = null,
+            DateTime? dueAfter = null,
+            List<int> tagIds = null)
+            => throw new NotImplementedException();
     }
 }

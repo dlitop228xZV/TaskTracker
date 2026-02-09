@@ -69,14 +69,21 @@ namespace TaskTracker.WebAPI.Controllers
         [SwaggerResponse(400, "Неверные данные")]
         public async Task<IActionResult> CreateTask([FromBody] CreateTaskDto createDto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
                 var task = await _taskService.CreateTaskAsync(createDto);
                 return CreatedAtAction(nameof(GetTask), new { id = task.Id }, TaskDto.FromEntity(task));
             }
-            catch (Exception ex)
+            catch (ArgumentException ex)
             {
                 return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Внутренняя ошибка: {ex.Message}" });
             }
         }
 
@@ -93,6 +100,9 @@ namespace TaskTracker.WebAPI.Controllers
         [SwaggerResponse(404, "Задача не найдена")]
         public async Task<IActionResult> UpdateTask(int id, [FromBody] UpdateTaskDto updateDto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
                 var task = await _taskService.UpdateTaskAsync(id, updateDto);
@@ -112,7 +122,6 @@ namespace TaskTracker.WebAPI.Controllers
             }
         }
 
-
         /// <summary>
         /// Удалить задачу
         /// </summary>
@@ -126,7 +135,7 @@ namespace TaskTracker.WebAPI.Controllers
         {
             var result = await _taskService.DeleteTaskAsync(id);
             if (!result)
-                return NotFound();
+                return NotFound(new { error = $"Задача с ID {id} не найдена" });
 
             return NoContent();
         }
@@ -138,7 +147,7 @@ namespace TaskTracker.WebAPI.Controllers
         /// <param name="assigneeId">Фильтр по исполнителю</param>
         /// <param name="dueBefore">Дедлайн до даты</param>
         /// <param name="dueAfter">Дедлайн после даты</param>
-        /// <param name="tagId">Фильтр по тегу</param>
+        /// <param name="tagIds">Фильтр по тегам</param>
         /// <returns>Отфильтрованный список задач</returns>
         [HttpGet("filter")]
         [SwaggerOperation(Summary = "Фильтрация задач", Description = "Возвращает задачи с применением фильтров")]
@@ -148,10 +157,79 @@ namespace TaskTracker.WebAPI.Controllers
             [FromQuery] int? assigneeId = null,
             [FromQuery] DateTime? dueBefore = null,
             [FromQuery] DateTime? dueAfter = null,
-            [FromQuery] List<int> tagId = default)
+            [FromQuery] List<int> tagIds = default)
         {
-            var tasks = await _taskService.GetFilteredTasksAsync(status, assigneeId, dueBefore, dueAfter, tagId);
+            try
+            {
+                var tasks = await _taskService.GetFilteredTasksAsync(status, assigneeId, dueBefore, dueAfter, tagIds);
+                return Ok(tasks);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Изменить статус задачи
+        /// </summary>
+        /// <param name="id">Идентификатор задачи</param>
+        /// <param name="newStatus">Новый статус (New, InProgress, Done)</param>
+        /// <returns>Результат операции</returns>
+        [HttpPatch("{id}/status")]
+        [SwaggerOperation(Summary = "Изменить статус задачи", Description = "Изменяет статус задачи. При переводе в Done автоматически устанавливается дата завершения.")]
+        [SwaggerResponse(200, "Статус изменён")]
+        [SwaggerResponse(400, "Неверный статус")]
+        [SwaggerResponse(404, "Задача не найдена")]
+        public async Task<IActionResult> ChangeTaskStatus(int id, [FromQuery] string newStatus)
+        {
+            try
+            {
+                var result = await _taskService.ChangeTaskStatusAsync(id, newStatus);
+                if (!result)
+                    return BadRequest(new { error = $"Некорректный статус: {newStatus}" });
+
+                return Ok(new { message = "Статус задачи успешно изменён" });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Получить просроченные задачи
+        /// </summary>
+        /// <returns>Список просроченных задач</returns>
+        [HttpGet("overdue")]
+        [SwaggerOperation(Summary = "Получить просроченные задачи", Description = "Возвращает список задач, у которых истёк срок выполнения")]
+        [SwaggerResponse(200, "Успешный запрос", typeof(List<TaskDto>))]
+        public async Task<IActionResult> GetOverdueTasks()
+        {
+            var tasks = await _taskService.GetOverdueTasksAsync();
             return Ok(tasks);
+        }
+
+        /// <summary>
+        /// Получить количество задач по статусу
+        /// </summary>
+        /// <param name="status">Статус для фильтрации</param>
+        /// <returns>Количество задач</returns>
+        [HttpGet("count-by-status")]
+        [SwaggerOperation(Summary = "Количество задач по статусу", Description = "Возвращает количество задач с указанным статусом")]
+        [SwaggerResponse(200, "Успешный запрос")]
+        [SwaggerResponse(400, "Неверный статус")]
+        public async Task<IActionResult> GetTasksCountByStatus([FromQuery] string status)
+        {
+            try
+            {
+                var count = await _taskService.GetTasksCountByStatusAsync(status);
+                return Ok(new { status, count });
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
         }
     }
 }

@@ -116,6 +116,9 @@ namespace TaskTracker.Application.Services
 
         public async Task<TaskItem> UpdateTaskAsync(int id, UpdateTaskDto updateDto)
         {
+            if (updateDto == null)
+                throw new ArgumentNullException(nameof(updateDto));
+
             // 1. Найти задачу
             var task = await _taskRepository.GetByIdAsync(id);
             if (task == null)
@@ -147,40 +150,37 @@ namespace TaskTracker.Application.Services
                 task.DueDate = updateDto.DueDate.Value;
             }
 
-            // 3. Обновить статус с логикой CompletedAt
-            if (!string.IsNullOrWhiteSpace(updateDto.Status))
+            // 3. Обновить статус с логикой CompletedAt - ИСПРАВЛЕНО
+            if (updateDto.Status.HasValue)
             {
-                if (Enum.TryParse<TaskItemStatus>(updateDto.Status, out var newStatus))
-                {
-                    // Если переводим в Done и задача ещё не была Done
-                    if (newStatus == TaskItemStatus.Done && task.Status != TaskItemStatus.Done)
-                    {
-                        task.CompletedAt = DateTime.UtcNow;
-                    }
-                    // Если убираем из Done
-                    else if (newStatus != TaskItemStatus.Done && task.Status == TaskItemStatus.Done)
-                    {
-                        task.CompletedAt = null;
-                    }
+                var newStatus = updateDto.Status.Value;
 
-                    task.Status = newStatus;
-                }
-                else
+                // Если переводим в Done и задача ещё не была Done
+                if (newStatus == TaskItemStatus.Done && task.Status != TaskItemStatus.Done)
                 {
-                    throw new ArgumentException($"Некорректный статус: {updateDto.Status}. Допустимые значения: New, InProgress, Done");
+                    task.CompletedAt = DateTime.UtcNow;
                 }
+                // Если убираем из Done
+                else if (newStatus != TaskItemStatus.Done && task.Status == TaskItemStatus.Done)
+                {
+                    task.CompletedAt = null;
+                }
+
+                task.Status = newStatus;
             }
 
             // 4. Обновить приоритет
             if (updateDto.Priority.HasValue)
             {
-                if (updateDto.Priority >= 1 && updateDto.Priority <= 3)
+                // Проверка, что значение приоритета является допустимым enum значением
+                if (Enum.IsDefined(typeof(TaskPriority), updateDto.Priority.Value))
                 {
-                    task.Priority = (TaskPriority)updateDto.Priority.Value;
+                    task.Priority = updateDto.Priority.Value;
                 }
                 else
                 {
-                    throw new ArgumentException($"Некорректный приоритет: {updateDto.Priority}. Допустимые значения: 1 (Low), 2 (Medium), 3 (High)");
+                    throw new ArgumentException($"Некорректный приоритет: {updateDto.Priority}. " +
+                        $"Допустимые значения: {string.Join(", ", Enum.GetNames(typeof(TaskPriority)))}");
                 }
             }
 

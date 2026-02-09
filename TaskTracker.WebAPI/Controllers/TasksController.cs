@@ -38,16 +38,24 @@ namespace TaskTracker.WebAPI.Controllers
         /// <param name="id">Идентификатор задачи</param>
         /// <returns>Задача</returns>
         [HttpGet("{id}")]
-        [SwaggerOperation(Summary = "Получить задачу по ID", Description = "Возвращает задачу по указанному идентификатору")]
+        [SwaggerOperation(Summary = "Получить задачу по ID", Description = "Возвращает детальную информацию о задаче")]
         [SwaggerResponse(200, "Задача найдена", typeof(TaskDto))]
         [SwaggerResponse(404, "Задача не найдена")]
         public async Task<IActionResult> GetTask(int id)
         {
-            var task = await _taskService.GetTaskByIdAsync(id);
-            if (task == null)
-                return NotFound();
-
-            return Ok(TaskDto.FromEntity(task));
+            try
+            {
+                var task = await _taskService.GetTaskByIdAsync(id);
+                return Ok(TaskDto.FromEntity(task));
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Внутренняя ошибка: {ex.Message}" });
+            }
         }
 
         /// <summary>
@@ -79,7 +87,7 @@ namespace TaskTracker.WebAPI.Controllers
         /// <param name="updateDto">Данные для обновления</param>
         /// <returns>Обновлённая задача</returns>
         [HttpPut("{id}")]
-        [SwaggerOperation(Summary = "Обновить задачу", Description = "Обновляет существующую задачу")]
+        [SwaggerOperation(Summary = "Обновить задачу", Description = "Обновляет существующую задачу. При переводе в статус Done автоматически устанавливает дату завершения.")]
         [SwaggerResponse(200, "Задача обновлена", typeof(TaskDto))]
         [SwaggerResponse(400, "Неверные данные")]
         [SwaggerResponse(404, "Задача не найдена")]
@@ -88,16 +96,22 @@ namespace TaskTracker.WebAPI.Controllers
             try
             {
                 var task = await _taskService.UpdateTaskAsync(id, updateDto);
-                if (task == null)
-                    return NotFound();
-
                 return Ok(TaskDto.FromEntity(task));
             }
-            catch (Exception ex)
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { error = ex.Message });
+            }
+            catch (ArgumentException ex)
             {
                 return BadRequest(new { error = ex.Message });
             }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = $"Внутренняя ошибка: {ex.Message}" });
+            }
         }
+
 
         /// <summary>
         /// Удалить задачу

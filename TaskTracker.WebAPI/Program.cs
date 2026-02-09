@@ -11,7 +11,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite("Data Source=tasktracker.db"));
 
-// Register Repository (ВАЖНО!)
+// Register Repository
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 
 // Register Services

@@ -7,22 +7,27 @@ using TaskTracker.Infrastructure.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container
+builder.Services.AddControllers();
+
 // Add DbContext
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=tasktracker.db"));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Register Repository
+// Register repositories
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-// Register Services
+// Register services
 builder.Services.AddScoped<ITaskService, TaskService>();
 
-builder.Services.AddControllers();
+// Add Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -32,33 +37,5 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
-
-// Create database
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-
-    if (!db.Tags.Any())
-    {
-        db.Tags.AddRange(
-            new TaskTracker.Domain.Entities.Tag { Name = "bug" },
-            new TaskTracker.Domain.Entities.Tag { Name = "feature" },
-            new TaskTracker.Domain.Entities.Tag { Name = "refactor" },
-            new TaskTracker.Domain.Entities.Tag { Name = "docs" }
-        );
-
-        if (!db.Users.Any())
-        {
-            db.Users.Add(new TaskTracker.Domain.Entities.User
-            {
-                Name = "Иванов И.И.",
-                Email = "ivanov@example.com"
-            });
-        }
-
-        db.SaveChanges();
-    }
-}
 
 app.Run();

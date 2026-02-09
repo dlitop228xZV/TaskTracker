@@ -5,7 +5,7 @@
         public int TaskId { get; set; }
         public int TagId { get; set; }
 
-        public TaskItem Task { get; set; }
-        public Tag Tag { get; set; }
+        public virtual TaskItem Task { get; set; } = null!;
+        public virtual Tag Tag { get; set; } = null!;
     }
 }

@@ -23,11 +23,11 @@ namespace TaskTracker.WebAPI.Controllers
         {
             var summary = new
             {
-                New = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.New),
-                InProgress = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.InProgress),
-                Done = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.Done),
+                New = await _context.Tasks.CountAsync(t => t.Status == (TaskStatus)TaskItemStatus.New),
+                InProgress = await _context.Tasks.CountAsync(t => t.Status == (TaskStatus)TaskItemStatus.InProgress),
+                Done = await _context.Tasks.CountAsync(t => t.Status == (TaskStatus)TaskItemStatus.Done),
                 Overdue = await _context.Tasks.CountAsync(t =>
-                    t.Status != TaskItemStatus.Done && t.DueDate.Date < DateTime.UtcNow.Date)
+                    t.Status != (TaskStatus)TaskItemStatus.Done && t.DueDate.Date < DateTime.UtcNow.Date)
             };
 
             return Ok(summary);

@@ -5,21 +5,22 @@ namespace TaskTracker.Application.Interfaces
 {
     public interface ITaskService
     {
-        Task<TaskItem> GetTaskByIdAsync(int id);
-        Task<List<TaskDto>> GetAllTasksAsync();
-        Task<List<TaskDto>> GetFilteredTasksAsync(
-            string status = null,
+        // Методы для задач
+        Task<IEnumerable<TaskItem>> GetAllTasksAsync(
+            string? status = null,
             int? assigneeId = null,
             DateTime? dueBefore = null,
             DateTime? dueAfter = null,
-            List<int> tagIds = null);
-        Task<TaskItem> CreateTaskAsync(CreateTaskDto createDto);
-        Task<TaskItem> UpdateTaskAsync(int id, UpdateTaskDto updateDto);
-        Task<bool> DeleteTaskAsync(int id);
+            List<int>? tagIds = null);
 
-        // Бизнес-логика
-        Task<bool> ChangeTaskStatusAsync(int taskId, string newStatus);
-        Task<List<TaskDto>> GetOverdueTasksAsync();
-        Task<int> GetTasksCountByStatusAsync(string status);
+        Task<TaskDto> GetTaskByIdAsync(int id);
+        Task<TaskItem> CreateTaskAsync(CreateTaskDto createDto);
+        Task<TaskDto> UpdateTaskAsync(int id, UpdateTaskDto updateDto);
+        Task DeleteTaskAsync(int id);
+
+        // Методы для отчётов
+        Task<Dictionary<string, int>> GetStatusSummaryAsync();
+        Task<Dictionary<string, List<string>>> GetOverdueTasksByAssigneeAsync();
+        Task<double> GetAverageCompletionTimeAsync();
     }
 }

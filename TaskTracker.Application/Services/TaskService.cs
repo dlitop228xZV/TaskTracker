@@ -4,166 +4,174 @@ using TaskTracker.Application.Interfaces;
 using TaskTracker.Domain.Entities;
 using TaskTracker.Domain.Enums;
 using TaskTracker.Domain.Interfaces;
-using TaskTracker.Infrastructure.Data;
 
 namespace TaskTracker.Application.Services
 {
     public class TaskService : ITaskService
     {
         private readonly ITaskRepository _taskRepository;
-        private readonly AppDbContext _context; // Для работы с тегами
+        private readonly IUserRepository _userRepository;
 
-        public TaskService(ITaskRepository taskRepository, AppDbContext context)
+        public TaskService(ITaskRepository taskRepository, IUserRepository userRepository)
         {
             _taskRepository = taskRepository;
-            _context = context;
+            _userRepository = userRepository;
         }
 
-        public async Task<TaskItem> GetTaskByIdAsync(int id)
+        public async Task<IEnumerable<TaskItem>> GetAllTasksAsync(
+            string? status = null,
+            int? assigneeId = null,
+            DateTime? dueBefore = null,
+            DateTime? dueAfter = null,
+            List<int>? tagIds = null)
         {
-            var task = await _taskRepository.GetByIdAsync(id);
+            return await _taskRepository.GetAllAsync(status, assigneeId, dueBefore, dueAfter, tagIds);
+        }
+
+        public async Task<TaskDto> GetTaskByIdAsync(int id)
+        {
+            var task = await _taskRepository.GetByIdWithDetailsAsync(id);
+
             if (task == null)
-                throw new KeyNotFoundException($"Задача с ID {id} не найдена");
+            {
+                throw new KeyNotFoundException($"Task with id {id} not found");
+            }
 
-            return task;
-        }
-
-        public async Task<List<TaskDto>> GetAllTasksAsync()
-        {
-            var tasks = await _taskRepository.GetAllAsync();
-            return tasks.Select(TaskDto.FromEntity).ToList();
+            // Преобразование TaskItem -> TaskDto
+            return new TaskDto
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                AssigneeId = task.AssigneeId,
+                AssigneeName = task.Assignee?.Name ?? "Unknown",
+                CreatedAt = task.CreatedAt,
+                DueDate = task.DueDate,
+                CompletedAt = task.CompletedAt,
+                Status = task.Status,
+                Priority = task.Priority,
+                Tags = task.TaskTags?
+                    .Select(tt => tt.Tag?.Name)
+                    .Where(name => name != null)
+                    .ToList() ?? new List<string>()
+            };
         }
 
         public async Task<TaskItem> CreateTaskAsync(CreateTaskDto createDto)
         {
+            // Проверить существование исполнителя
+            var userExists = await _userRepository.ExistsAsync(createDto.AssigneeId);
+            if (!userExists)
+            {
+                throw new ArgumentException($"User with id {createDto.AssigneeId} not found");
+            }
+
             var task = new TaskItem
             {
                 Title = createDto.Title,
-                Description = createDto.Description ?? "",
+                Description = createDto.Description,
                 AssigneeId = createDto.AssigneeId,
                 DueDate = createDto.DueDate,
                 Priority = createDto.Priority,
-                Status = TaskItemStatus.New,
-                CreatedAt = DateTime.UtcNow
+                Status = (TaskStatus)TaskItemStatus.New // Используем enum значение
             };
 
-            // Пока без тегов, добавим позже
-            return await _taskRepository.AddAsync(task);
+            var createdTask = await _taskRepository.AddAsync(task);
+
+            // Добавить теги, если есть
+            if (createDto.TagIds != null && createDto.TagIds.Any())
+            {
+                await _taskRepository.UpdateTaskTagsAsync(createdTask.Id, createDto.TagIds);
+            }
+
+            return createdTask;
         }
 
-        // Остальные методы - заглушки
-        public Task<List<TaskDto>> GetFilteredTasksAsync(string status = null, int? assigneeId = null, DateTime? dueBefore = null, DateTime? dueAfter = null, List<int> tagIds = null)
-            => Task.FromResult(new List<TaskDto>());
-
-        public async Task<TaskItem> UpdateTaskAsync(int id, UpdateTaskDto updateDto)
+        public async Task<TaskDto> UpdateTaskAsync(int id, UpdateTaskDto updateDto)
         {
-            // 1. Найти задачу
+            // 1. Найти задачу (404 если не найдена)
             var task = await _taskRepository.GetByIdAsync(id);
             if (task == null)
-                throw new KeyNotFoundException($"Задача с ID {id} не найдена");
-
-            // 2. Обновить основные поля
-            if (!string.IsNullOrWhiteSpace(updateDto.Title))
-                task.Title = updateDto.Title;
-
-            if (updateDto.Description != null) // Разрешаем пустое описание
-                task.Description = updateDto.Description;
-
-            if (updateDto.AssigneeId.HasValue)
-                task.AssigneeId = updateDto.AssigneeId.Value;
-
-            if (updateDto.DueDate.HasValue)
-                task.DueDate = updateDto.DueDate.Value;
-
-            // 3. Обновить статус с логикой CompletedAt
-            if (!string.IsNullOrWhiteSpace(updateDto.Status))
             {
-                if (Enum.TryParse<TaskItemStatus>(updateDto.Status, out var newStatus))
-                {
-                    // Если переводим в Done и задача ещё не была Done
-                    if (newStatus == TaskItemStatus.Done && task.Status != TaskItemStatus.Done)
-                    {
-                        task.CompletedAt = DateTime.UtcNow;
-                    }
-                    // Если убираем из Done
-                    else if (newStatus != TaskItemStatus.Done && task.Status == TaskItemStatus.Done)
-                    {
-                        task.CompletedAt = null;
-                    }
-
-                    task.Status = newStatus;
-                }
-                else
-                {
-                    throw new ArgumentException($"Некорректный статус: {updateDto.Status}");
-                }
+                throw new KeyNotFoundException($"Task with id {id} not found");
             }
 
-            // 4. Обновить приоритет
-            if (updateDto.Priority.HasValue)
+            // 2. Проверить существование исполнителя
+            var userExists = await _userRepository.ExistsAsync(updateDto.AssigneeId);
+            if (!userExists)
             {
-                if (Enum.TryParse<TaskPriority>(updateDto.Priority.ToString(), out var priority))
-                {
-                    task.Priority = priority;
-                }
-                else
-                {
-                    throw new ArgumentException($"Некорректный приоритет: {updateDto.Priority}");
-                }
+                throw new ArgumentException($"User with id {updateDto.AssigneeId} not found");
             }
 
-            // 5. Обновить теги
-            if (updateDto.TagIds != null)
-            {
-                // Удалить старые связи
-                var existingTaskTags = await _context.TaskTags
-                    .Where(tt => tt.TaskId == task.Id)
-                    .ToListAsync();
-                _context.TaskTags.RemoveRange(existingTaskTags);
+            // 3. Обновить задачу
+            task.Update(
+                updateDto.Title,
+                updateDto.Description,
+                updateDto.AssigneeId,
+                updateDto.DueDate,
+                updateDto.Priority,
+                updateDto.Status
+            );
 
-                // Добавить новые связи
-                if (updateDto.TagIds.Any())
-                {
-                    var tags = await _context.Tags
-                        .Where(t => updateDto.TagIds.Contains(t.Id))
-                        .ToListAsync();
-
-                    foreach (var tag in tags)
-                    {
-                        _context.TaskTags.Add(new TaskTag
-                        {
-                            TaskId = task.Id,
-                            TagId = tag.Id
-                        });
-                    }
-                }
-            }
-
-            // 6. Сохранить изменения
+            // 4. Сохранить изменения задачи
             await _taskRepository.UpdateAsync(task);
-            await _context.SaveChangesAsync();
 
-            // 7. Вернуть обновлённую задачу с загруженными связями
-            return await _taskRepository.GetByIdAsync(id);
+            // 5. Обновить связи с тегами (если переданы TagIds)
+            if (updateDto.TagIds != null && updateDto.TagIds.Any())
+            {
+                await _taskRepository.UpdateTaskTagsAsync(id, updateDto.TagIds);
+            }
+
+            // 6. Вернуть обновленную задачу как DTO
+            return await GetTaskByIdAsync(id);
         }
 
-
-        public async Task<bool> DeleteTaskAsync(int id)
+        public async Task DeleteTaskAsync(int id)
         {
-            var task = await _taskRepository.GetByIdAsync(id);
-            if (task == null) return false;
-
             await _taskRepository.DeleteAsync(id);
-            return true;
         }
 
-        public Task<bool> ChangeTaskStatusAsync(int taskId, string newStatus)
-            => Task.FromResult(true);
+        // Методы для отчётов (заглушки)
+        public async Task<Dictionary<string, int>> GetStatusSummaryAsync()
+        {
+            var tasks = await _taskRepository.GetAllAsync();
+            return tasks
+                .GroupBy(t => t.Status.ToString())
+                .ToDictionary(g => g.Key, g => g.Count());
+        }
 
-        public Task<List<TaskDto>> GetOverdueTasksAsync()
-            => Task.FromResult(new List<TaskDto>());
+        public async Task<Dictionary<string, List<string>>> GetOverdueTasksByAssigneeAsync()
+        {
+            var tasks = await _taskRepository.GetAllAsync();
+            var now = DateTime.Now;
 
-        public Task<int> GetTasksCountByStatusAsync(string status)
-            => Task.FromResult(0);
+            var overdueTasks = tasks
+                .Where(t => t.DueDate < now && t.Status != (TaskStatus)TaskItemStatus.Done)
+                .GroupBy(t => t.Assignee?.Name ?? "Unknown")
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(t => $"Task #{t.Id}: {t.Title}").ToList()
+                );
+
+            return overdueTasks;
+        }
+
+        public async Task<double> GetAverageCompletionTimeAsync()
+        {
+            var tasks = await _taskRepository.GetAllAsync();
+            var completedTasks = tasks
+                .Where(t => t.Status == (TaskStatus)TaskItemStatus.Done && t.CompletedAt.HasValue)
+                .ToList();
+
+            if (!completedTasks.Any())
+            {
+                return 0;
+            }
+
+            var averageDays = completedTasks
+                .Average(t => (t.CompletedAt!.Value - t.CreatedAt).TotalDays);
+
+            return Math.Round(averageDays, 2);
+        }
     }
 }

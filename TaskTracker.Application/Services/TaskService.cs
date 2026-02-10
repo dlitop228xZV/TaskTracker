@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using TaskTracker.Application.DTOs;
 using TaskTracker.Application.Interfaces;
 using TaskTracker.Domain.Entities;
@@ -12,11 +13,16 @@ namespace TaskTracker.Application.Services
     {
         private readonly ITaskRepository _taskRepository;
         private readonly AppDbContext _context;
+        private readonly ILogger<TaskService> _logger;
 
-        public TaskService(ITaskRepository taskRepository, AppDbContext context)
+        public TaskService(
+            ITaskRepository taskRepository,
+            AppDbContext context,
+            ILogger<TaskService> logger)
         {
             _taskRepository = taskRepository;
             _context = context;
+            _logger = logger;
         }
 
         public async Task<TaskItem> GetTaskByIdAsync(int id)
@@ -78,40 +84,10 @@ namespace TaskTracker.Application.Services
             DateTime? dueAfter = null,
             List<int> tagIds = null)
         {
-            var tasks = await _taskRepository.GetAllAsync();
+            var tasks = await _taskRepository.GetFilteredAsync(
+                status, assigneeId, dueBefore, dueAfter, tagIds);
 
-            var filtered = tasks.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(status))
-            {
-                if (Enum.TryParse<TaskItemStatus>(status, out var statusEnum))
-                {
-                    filtered = filtered.Where(t => t.Status == statusEnum);
-                }
-            }
-
-            if (assigneeId.HasValue)
-            {
-                filtered = filtered.Where(t => t.AssigneeId == assigneeId.Value);
-            }
-
-            if (dueBefore.HasValue)
-            {
-                filtered = filtered.Where(t => t.DueDate <= dueBefore.Value);
-            }
-
-            if (dueAfter.HasValue)
-            {
-                filtered = filtered.Where(t => t.DueDate >= dueAfter.Value);
-            }
-
-            if (tagIds?.Any() == true)
-            {
-                filtered = filtered.Where(t =>
-                    t.TaskTags.Any(tt => tagIds.Contains(tt.TagId)));
-            }
-
-            return filtered.Select(TaskDto.FromEntity).ToList();
+            return tasks.Select(TaskDto.FromEntity).ToList();
         }
 
         public async Task<TaskItem> UpdateTaskAsync(int id, UpdateTaskDto updateDto)
@@ -150,7 +126,7 @@ namespace TaskTracker.Application.Services
                 task.DueDate = updateDto.DueDate.Value;
             }
 
-            // 3. Обновить статус с логикой CompletedAt - ИСПРАВЛЕНО
+            // 3. Обновить статус с логикой CompletedAt
             if (updateDto.Status.HasValue)
             {
                 var newStatus = updateDto.Status.Value;
@@ -172,7 +148,6 @@ namespace TaskTracker.Application.Services
             // 4. Обновить приоритет
             if (updateDto.Priority.HasValue)
             {
-                // Проверка, что значение приоритета является допустимым enum значением
                 if (Enum.IsDefined(typeof(TaskPriority), updateDto.Priority.Value))
                 {
                     task.Priority = updateDto.Priority.Value;
@@ -224,15 +199,6 @@ namespace TaskTracker.Application.Services
             return await _taskRepository.GetByIdAsync(id);
         }
 
-        public async Task<bool> DeleteTaskAsync(int id)
-        {
-            var task = await _taskRepository.GetByIdAsync(id);
-            if (task == null) return false;
-
-            await _taskRepository.DeleteAsync(id);
-            return true;
-        }
-
         public async Task<bool> ChangeTaskStatusAsync(int taskId, string newStatus)
         {
             var task = await GetTaskByIdAsync(taskId);
@@ -276,6 +242,39 @@ namespace TaskTracker.Application.Services
                 return tasks.Count(t => t.Status == statusEnum);
             }
             throw new ArgumentException($"Некорректный статус: {status}");
+        }
+
+        /// <summary>
+        /// Удаляет задачу по ID (жёсткое удаление)
+        /// </summary>
+        /// <param name="id">Идентификатор задачи</param>
+        /// <returns>True если удаление успешно, false если задача не найдена</returns>
+        public async Task<bool> DeleteTaskAsync(int id)
+        {
+            try
+            {
+                // Проверяем существование задачи
+                var task = await _taskRepository.GetByIdAsync(id);
+                if (task == null)
+                {
+                    _logger.LogWarning("Задача с ID {TaskId} не найдена для удаления", id);
+                    return false;
+                }
+
+                _logger.LogInformation("Начинаем удаление задачи ID {TaskId}", id);
+
+                // Удаляем задачу (в репозитории уже должна быть логика удаления связанных TaskTags)
+                await _taskRepository.DeleteAsync(task);
+
+                _logger.LogInformation("Задача ID {TaskId} успешно удалена", id);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка при удалении задачи ID {TaskId}: {ErrorMessage}",
+                    id, ex.Message);
+                throw new ApplicationException($"Ошибка при удалении задачи: {ex.Message}", ex);
+            }
         }
     }
 }

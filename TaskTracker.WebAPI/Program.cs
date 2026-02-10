@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskTracker.Application.Interfaces;
 using TaskTracker.Application.Services;
+using TaskTracker.Domain.Entities;
 using TaskTracker.Domain.Interfaces;
 using TaskTracker.Infrastructure.Data;
 using TaskTracker.Infrastructure.Data.Repositories;
+using TaskTracker.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,9 +19,18 @@ builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 // Register Services
 builder.Services.AddScoped<ITaskService, TaskService>();
 
+// Program.cs или Startup.cs
+builder.Services.AddScoped<IRepository<TaskTag>, Repository<TaskTag>>();
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IRepository<TaskTag>, Repository<TaskTag>>();
+builder.Services.AddScoped<IRepository<Tag>, Repository<Tag>>();
+builder.Services.AddScoped<IRepository<User>, Repository<User>>();
+builder.Services.AddScoped<ITaskService, TaskService>();
 
 var app = builder.Build();
 

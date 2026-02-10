@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskTracker.Domain.Entities;
+using TaskTracker.Domain.Enums;
 using TaskTracker.Domain.Interfaces;
 using TaskTracker.Infrastructure.Data;
 
@@ -32,6 +33,25 @@ namespace TaskTracker.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public IQueryable<TaskItem> GetAll()
+        {
+            return _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.TaskTags)
+                .ThenInclude(tt => tt.Tag)
+                .AsQueryable();
+        }
+
+        public async Task<List<TaskItem>> FindAsync(System.Linq.Expressions.Expression<Func<TaskItem, bool>> predicate)
+        {
+            return await _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.TaskTags)
+                .ThenInclude(tt => tt.Tag)
+                .Where(predicate)
+                .ToListAsync();
+        }
+
         public async Task<TaskItem> AddAsync(TaskItem entity)
         {
             _context.Tasks.Add(entity);
@@ -45,28 +65,71 @@ namespace TaskTracker.Infrastructure.Data.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task DeleteAsync(TaskItem entity)
         {
-            var task = await GetByIdAsync(id);
-            if (task != null)
-            {
-                // Удаляем связи с тегами
-                var taskTags = await _context.TaskTags
-                    .Where(tt => tt.TaskId == id)
-                    .ToListAsync();
-                _context.TaskTags.RemoveRange(taskTags);
+            // Удаляем связи с тегами
+            var taskTags = await _context.TaskTags
+                .Where(tt => tt.TaskId == entity.Id)
+                .ToListAsync();
+            _context.TaskTags.RemoveRange(taskTags);
 
-                _context.Tasks.Remove(task);
-                await _context.SaveChangesAsync();
-            }
+            _context.Tasks.Remove(entity);
+            await _context.SaveChangesAsync();
         }
 
-        public Task<List<TaskItem>> GetFilteredAsync(
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var task = await GetByIdAsync(id);
+            if (task == null)
+                return false;
+
+            await DeleteAsync(task);
+            return true;
+        }
+
+        public async Task<List<TaskItem>> GetFilteredAsync(
             string status = null,
             int? assigneeId = null,
             DateTime? dueBefore = null,
             DateTime? dueAfter = null,
             List<int> tagIds = null)
-            => throw new NotImplementedException();
+        {
+            var query = _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.TaskTags)
+                .ThenInclude(tt => tt.Tag)
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (Enum.TryParse<TaskItemStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(t => t.Status == statusEnum);
+                }
+            }
+
+            if (assigneeId.HasValue)
+            {
+                query = query.Where(t => t.AssigneeId == assigneeId.Value);
+            }
+
+            if (dueBefore.HasValue)
+            {
+                query = query.Where(t => t.DueDate <= dueBefore.Value);
+            }
+
+            if (dueAfter.HasValue)
+            {
+                query = query.Where(t => t.DueDate >= dueAfter.Value);
+            }
+
+            if (tagIds?.Any() == true)
+            {
+                query = query.Where(t =>
+                    t.TaskTags.Any(tt => tagIds.Contains(tt.TagId)));
+            }
+
+            return await query.ToListAsync();
+        }
     }
 }

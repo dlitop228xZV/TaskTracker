@@ -8,12 +8,16 @@ namespace TaskTracker.Domain.Interfaces
         Task<List<TaskItem>> GetAllAsync();
         Task<TaskItem> AddAsync(TaskItem entity);
         Task UpdateAsync(TaskItem entity);
-        Task DeleteAsync(int id);
+
+        // Добавляем методы удаления
+        Task<bool> DeleteAsync(int id);
+        Task DeleteAsync(TaskItem entity);
+
         Task<List<TaskItem>> GetFilteredAsync(
-    string status = null,
-    int? assigneeId = null,
-    DateTime? dueBefore = null,
-    DateTime? dueAfter = null,
-    List<int> tagIds = null);
+            string status = null,
+            int? assigneeId = null,
+            DateTime? dueBefore = null,
+            DateTime? dueAfter = null,
+            List<int> tagIds = null);
     }
 }

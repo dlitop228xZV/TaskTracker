@@ -1,23 +1,17 @@
 ﻿using TaskTracker.Domain.Entities;
 
-namespace TaskTracker.Domain.Interfaces
+public interface ITaskRepository
 {
-    public interface ITaskRepository
-    {
-        Task<TaskItem> GetByIdAsync(int id);
-        Task<List<TaskItem>> GetAllAsync();
-        Task<TaskItem> AddAsync(TaskItem entity);
-        Task UpdateAsync(TaskItem entity);
+    Task<TaskItem?> GetByIdAsync(int id);
+    Task<List<TaskItem>> GetAllAsync();
+    Task<TaskItem> AddAsync(TaskItem entity);
+    Task UpdateAsync(TaskItem entity);
+    Task DeleteAsync(TaskItem entity);
 
-        // Добавляем методы удаления
-        Task<bool> DeleteAsync(int id);
-        Task DeleteAsync(TaskItem entity);
-
-        Task<List<TaskItem>> GetFilteredAsync(
-            string status = null,
-            int? assigneeId = null,
-            DateTime? dueBefore = null,
-            DateTime? dueAfter = null,
-            List<int> tagIds = null);
-    }
+    Task<List<TaskItem>> GetFilteredAsync(
+        string status = null,
+        int? assigneeId = null,
+        DateTime? dueBefore = null,
+        DateTime? dueAfter = null,
+        List<int> tagIds = null);
 }

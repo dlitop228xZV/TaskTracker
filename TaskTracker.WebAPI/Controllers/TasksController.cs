@@ -133,20 +133,12 @@ namespace TaskTracker.WebAPI.Controllers
         [SwaggerResponse(404, "Задача не найдена")]
         public async Task<IActionResult> DeleteTask(int id)
         {
-            try
-            {
-                var result = await _taskService.DeleteTaskAsync(id);
-                if (!result)
-                {
-                    return NotFound($"Задача с ID {id} не найдена");
-                }
+            var result = await _taskService.DeleteTaskAsync(id);
 
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Ошибка при удалении задачи: {ex.Message}");
-            }
+            if (!result)
+                return NotFound();
+
+            return NoContent();
         }
 
         /// <summary>

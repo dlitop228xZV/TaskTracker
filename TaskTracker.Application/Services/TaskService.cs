@@ -78,17 +78,68 @@ namespace TaskTracker.Application.Services
         }
 
         public async Task<List<TaskDto>> GetFilteredTasksAsync(
-            string status = null,
-            int? assigneeId = null,
-            DateTime? dueBefore = null,
-            DateTime? dueAfter = null,
-            List<int> tagIds = null)
+    string status = null,
+    int? assigneeId = null,
+    DateTime? dueBefore = null,
+    DateTime? dueAfter = null,
+    List<int> tagIds = null)
         {
-            var tasks = await _taskRepository.GetFilteredAsync(
-                status, assigneeId, dueBefore, dueAfter, tagIds);
+            IQueryable<TaskItem> query = _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.TaskTags)
+                    .ThenInclude(tt => tt.Tag);
 
-            return tasks.Select(TaskDto.FromEntity).ToList();
+            if (!string.IsNullOrWhiteSpace(status))
+            {
+                if (Enum.TryParse<TaskItemStatus>(status, true, out var parsedStatus))
+                {
+                    query = query.Where(t => t.Status == parsedStatus);
+                }
+            }
+
+            // Фильтр по исполнителю
+            if (assigneeId.HasValue)
+            {
+                query = query.Where(t => t.AssigneeId == assigneeId.Value);
+            }
+
+            // Фильтр по дедлайну до
+            if (dueBefore.HasValue)
+            {
+                query = query.Where(t => t.DueDate <= dueBefore.Value);
+            }
+
+            // Фильтр по дедлайну после
+            if (dueAfter.HasValue)
+            {
+                query = query.Where(t => t.DueDate >= dueAfter.Value);
+            }
+
+            // Фильтр по тегам
+            if (tagIds != null && tagIds.Any())
+            {
+                query = query.Where(t =>
+                    t.TaskTags.Any(tt => tagIds.Contains(tt.TagId)));
+            }
+
+            var tasks = await query.ToListAsync();
+
+            return tasks.Select(t => new TaskDto
+            {
+                Id = t.Id,
+                Title = t.Title,
+                Description = t.Description,
+                AssigneeId = t.AssigneeId,
+                AssigneeName = t.Assignee?.Name,
+                CreatedAt = t.CreatedAt,
+                DueDate = t.DueDate,
+                CompletedAt = t.CompletedAt,
+                Status = t.Status,
+                Priority = t.Priority,
+                Tags = t.TaskTags.Select(tt => tt.Tag.Name).ToList()
+            }).ToList();
         }
+
 
         public async Task<TaskItem> UpdateTaskAsync(int id, UpdateTaskDto updateDto)
         {

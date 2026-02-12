@@ -2,6 +2,7 @@
 using Swashbuckle.AspNetCore.Annotations;
 using TaskTracker.Application.DTOs;
 using TaskTracker.Application.Interfaces;
+using TaskTracker.Domain.Enums;
 
 namespace TaskTracker.WebAPI.Controllers
 {
@@ -20,15 +21,56 @@ namespace TaskTracker.WebAPI.Controllers
         }
 
         /// <summary>
-        /// Получить список всех задач
+        /// Получить список задач с возможностью фильтрации.
         /// </summary>
-        /// <returns>Список задач</returns>
+        /// <remarks>
+        /// Примеры запросов:
+        ///
+        /// GET /api/tasks
+        ///
+        /// GET /api/tasks?status=InProgress
+        ///
+        /// GET /api/tasks?status=Done&assigneeId=2
+        ///
+        /// GET /api/tasks?status=New&dueBefore=2026-02-15
+        /// </remarks>
+        /// <param name="status">
+        /// Фильтр по статусу задачи.
+        /// Возможные значения: New, InProgress, Done.
+        /// </param>
+        /// <param name="assigneeId">
+        /// Фильтр по идентификатору исполнителя.
+        /// </param>
+        /// <param name="dueBefore">
+        /// Показать задачи с дедлайном до указанной даты.
+        /// </param>
+        /// <param name="dueAfter">
+        /// Показать задачи с дедлайном после указанной даты.
+        /// </param>
+        /// <param name="tagIds">
+        /// Фильтр по тегам (можно передать несколько значений).
+        /// </param>
+        /// <response code="200">Список задач успешно получен</response>
+        /// <response code="400">Ошибка валидации параметров</response>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [SwaggerOperation(Summary = "Получить все задачи", Description = "Возвращает список всех задач в системе")]
         [SwaggerResponse(200, "Успешный запрос", typeof(List<TaskDto>))]
-        public async Task<IActionResult> GetTasks()
+        public async Task<ActionResult<List<TaskDto>>> GetTasks(
+        [FromQuery] TaskItemStatus? status,
+        [FromQuery] int? assigneeId,
+        [FromQuery] DateTime? dueBefore,
+        [FromQuery] DateTime? dueAfter,
+        [FromQuery] List<int> tagIds)
         {
-            var tasks = await _taskService.GetAllTasksAsync();
+            var tasks = await _taskService.GetFilteredTasksAsync(
+                status?.ToString(),
+                assigneeId,
+                dueBefore,
+                dueAfter,
+                tagIds);
+
             return Ok(tasks);
         }
 

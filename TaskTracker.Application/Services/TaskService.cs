@@ -36,7 +36,13 @@ namespace TaskTracker.Application.Services
 
         public async Task<List<TaskDto>> GetAllTasksAsync()
         {
-            var tasks = await _taskRepository.GetAllAsync();
+            // Старый метод оставляем для обратной совместимости.
+            return await GetAllTasksAsync(assigneeId: null);
+        }
+
+        public async Task<List<TaskDto>> GetAllTasksAsync(int? assigneeId)
+        {
+            var tasks = await _taskRepository.GetAllAsync(assigneeId);
             return tasks.Select(TaskDto.FromEntity).ToList();
         }
 

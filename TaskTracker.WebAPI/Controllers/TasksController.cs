@@ -64,12 +64,21 @@ namespace TaskTracker.WebAPI.Controllers
         [FromQuery] DateTime? dueAfter,
         [FromQuery] List<int> tagIds)
         {
-            var tasks = await _taskService.GetFilteredTasksAsync(
-                status?.ToString(),
-                assigneeId,
-                dueBefore,
-                dueAfter,
-                tagIds);
+            // Если задан только assigneeId (или вообще нет фильтров),
+            // используем GetAllTasksAsync(assigneeId) — это расширенный вариант старого GetAllTasksAsync().
+            var hasAnyFiltersExceptAssignee = status.HasValue
+                || dueBefore.HasValue
+                || dueAfter.HasValue
+                || (tagIds?.Any() == true);
+
+            var tasks = hasAnyFiltersExceptAssignee
+                ? await _taskService.GetFilteredTasksAsync(
+                    status?.ToString(),
+                    assigneeId,
+                    dueBefore,
+                    dueAfter,
+                    tagIds)
+                : await _taskService.GetAllTasksAsync(assigneeId);
 
             return Ok(tasks);
         }

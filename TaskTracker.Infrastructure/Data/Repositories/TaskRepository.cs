@@ -33,6 +33,22 @@ namespace TaskTracker.Infrastructure.Data.Repositories
                 .ToListAsync();
         }
 
+        public async Task<List<TaskItem>> GetAllAsync(int? assigneeId)
+        {
+            var query = _context.Tasks
+                .Include(t => t.Assignee)
+                .Include(t => t.TaskTags)
+                .ThenInclude(tt => tt.Tag)
+                .AsQueryable();
+
+            if (assigneeId.HasValue)
+            {
+                query = query.Where(t => t.AssigneeId == assigneeId.Value);
+            }
+
+            return await query.ToListAsync();
+        }
+
         public IQueryable<TaskItem> GetAll()
         {
             return _context.Tasks

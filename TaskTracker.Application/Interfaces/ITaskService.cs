@@ -6,16 +6,18 @@ namespace TaskTracker.Application.Interfaces
     public interface ITaskService
     {
         Task<TaskItem> GetTaskByIdAsync(int id);
+
         Task<List<TaskDto>> GetAllTasksAsync();
 
         /// <summary>
-        /// Получить список задач с опциональной фильтрацией по исполнителю.
+        /// Получить список задач с опциональной фильтрацией по исполнителю и диапазону дедлайна.
         /// </summary>
-        /// <param name="assigneeId">Id исполнителя. Если null — возвращаются все задачи.</param>
-        /// <returns>Список задач</returns>
-        Task<List<TaskDto>> GetAllTasksAsync(int? assigneeId);
-        Task<TaskItem> CreateTaskAsync(CreateTaskDto createDto);
+        /// <param name="assigneeId">Фильтр по исполнителю</param>
+        /// <param name="dueBefore">DueDate <= dueBefore</param>
+        /// <param name="dueAfter">DueDate >= dueAfter</param>
+        Task<List<TaskDto>> GetAllTasksAsync(int? assigneeId, DateTime? dueBefore, DateTime? dueAfter);
 
+        Task<TaskItem> CreateTaskAsync(CreateTaskDto createDto);
         Task<List<TaskDto>> GetFilteredTasksAsync(
             string status = null,
             int? assigneeId = null,

@@ -6,11 +6,9 @@ public interface ITaskRepository
     Task<List<TaskItem>> GetAllAsync();
 
     /// <summary>
-    /// Получить все задачи с опциональной фильтрацией по исполнителю.
-    /// Старый метод <see cref="GetAllAsync()"/> сохранён для обратной совместимости.
+    /// Получить список задач с опциональной фильтрацией по исполнителю и диапазону дедлайна.
     /// </summary>
-    /// <param name="assigneeId">Id исполнителя. Если null — возвращаются все задачи.</param>
-    Task<List<TaskItem>> GetAllAsync(int? assigneeId);
+    Task<List<TaskItem>> GetAllAsync(int? assigneeId, DateTime? dueBefore, DateTime? dueAfter);
 
     Task<TaskItem> AddAsync(TaskItem entity);
     Task UpdateAsync(TaskItem entity);

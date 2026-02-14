@@ -36,13 +36,13 @@ namespace TaskTracker.Application.Services
 
         public async Task<List<TaskDto>> GetAllTasksAsync()
         {
-            // Старый метод оставляем для обратной совместимости.
-            return await GetAllTasksAsync(assigneeId: null);
+            // Старый метод — оставляем. Теперь он использует новую перегрузку.
+            return await GetAllTasksAsync(assigneeId: null, dueBefore: null, dueAfter: null);
         }
 
-        public async Task<List<TaskDto>> GetAllTasksAsync(int? assigneeId)
+        public async Task<List<TaskDto>> GetAllTasksAsync(int? assigneeId, DateTime? dueBefore, DateTime? dueAfter)
         {
-            var tasks = await _taskRepository.GetAllAsync(assigneeId);
+            var tasks = await _taskRepository.GetAllAsync(assigneeId, dueBefore, dueAfter);
             return tasks.Select(TaskDto.FromEntity).ToList();
         }
 
@@ -83,12 +83,13 @@ namespace TaskTracker.Application.Services
             return await _taskRepository.AddAsync(task);
         }
 
+        // Старый метод — НЕ УДАЛЯЕМ
         public async Task<List<TaskDto>> GetFilteredTasksAsync(
-    string status = null,
-    int? assigneeId = null,
-    DateTime? dueBefore = null,
-    DateTime? dueAfter = null,
-    List<int> tagIds = null)
+            string status = null,
+            int? assigneeId = null,
+            DateTime? dueBefore = null,
+            DateTime? dueAfter = null,
+            List<int> tagIds = null)
         {
             IQueryable<TaskItem> query = _context.Tasks
                 .Include(t => t.Assignee)
@@ -146,7 +147,6 @@ namespace TaskTracker.Application.Services
             }).ToList();
         }
 
-
         public async Task<TaskItem> UpdateTaskAsync(int id, UpdateTaskDto updateDto)
         {
             if (updateDto == null)
@@ -183,7 +183,7 @@ namespace TaskTracker.Application.Services
                 task.DueDate = updateDto.DueDate.Value;
             }
 
-            // 3. Обновить статус с логикой CompletedAt
+            // 3. Обновить статус с логикой CompletedAt (это и тестируем)
             if (updateDto.Status.HasValue)
             {
                 var newStatus = updateDto.Status.Value;
@@ -219,20 +219,17 @@ namespace TaskTracker.Application.Services
             // 5. Обновить теги
             if (updateDto.TagIds != null)
             {
-                // Удалить старые связи
                 var existingTaskTags = await _context.TaskTags
                     .Where(tt => tt.TaskId == task.Id)
                     .ToListAsync();
                 _context.TaskTags.RemoveRange(existingTaskTags);
 
-                // Добавить новые связи
                 if (updateDto.TagIds.Any())
                 {
                     var tags = await _context.Tags
                         .Where(t => updateDto.TagIds.Contains(t.Id))
                         .ToListAsync();
 
-                    // Проверка существования всех тегов
                     var notFoundIds = updateDto.TagIds.Except(tags.Select(t => t.Id)).ToList();
                     if (notFoundIds.Any())
                         throw new ArgumentException($"Теги с ID {string.Join(", ", notFoundIds)} не найдены");
@@ -252,7 +249,7 @@ namespace TaskTracker.Application.Services
             await _taskRepository.UpdateAsync(task);
             await _context.SaveChangesAsync();
 
-            // 7. Вернуть обновлённую задачу с загруженными связями
+            // 7. Вернуть обновлённую задачу
             return await _taskRepository.GetByIdAsync(id);
         }
 
@@ -262,12 +259,10 @@ namespace TaskTracker.Application.Services
 
             if (Enum.TryParse<TaskItemStatus>(newStatus, out var statusEnum))
             {
-                // Если переводим в Done
                 if (statusEnum == TaskItemStatus.Done && task.Status != TaskItemStatus.Done)
                 {
                     task.CompletedAt = DateTime.UtcNow;
                 }
-                // Если убираем из Done
                 else if (statusEnum != TaskItemStatus.Done && task.Status == TaskItemStatus.Done)
                 {
                     task.CompletedAt = null;
@@ -301,16 +296,10 @@ namespace TaskTracker.Application.Services
             throw new ArgumentException($"Некорректный статус: {status}");
         }
 
-        /// <summary>
-        /// Удаляет задачу по ID (жёсткое удаление)
-        /// </summary>
-        /// <param name="id">Идентификатор задачи</param>
-        /// <returns>True если удаление успешно, false если задача не найдена</returns>
         public async Task<bool> DeleteTaskAsync(int id)
         {
             try
             {
-                // Проверяем существование задачи
                 var task = await _taskRepository.GetByIdAsync(id);
                 if (task == null)
                 {
@@ -320,7 +309,6 @@ namespace TaskTracker.Application.Services
 
                 _logger.LogInformation("Начинаем удаление задачи ID {TaskId}", id);
 
-                // Удаляем задачу (в репозитории уже должна быть логика удаления связанных TaskTags)
                 await _taskRepository.DeleteAsync(task);
 
                 _logger.LogInformation("Задача ID {TaskId} успешно удалена", id);

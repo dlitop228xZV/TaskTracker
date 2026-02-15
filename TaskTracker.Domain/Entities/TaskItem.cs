@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using TaskTracker.Domain.Enums;
 
 namespace TaskTracker.Domain.Entities
@@ -7,29 +7,32 @@ namespace TaskTracker.Domain.Entities
     {
         public int Id { get; set; }
 
-        [Required]
-        [MinLength(3)]
-        [MaxLength(200)]
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
 
-        public string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
         public int AssigneeId { get; set; }
 
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public User? Assignee { get; set; }
+
+        public DateTime CreatedAt { get; set; }
 
         public DateTime DueDate { get; set; }
 
         public DateTime? CompletedAt { get; set; }
 
-        public TaskItemStatus Status { get; set; } = TaskItemStatus.New;
+        public TaskItemStatus Status { get; set; }
 
-        public TaskPriority Priority { get; set; } = TaskPriority.Medium;
+        public TaskPriority Priority { get; set; }
 
-        public User Assignee { get; set; }
         public List<TaskTag> TaskTags { get; set; } = new();
 
-        public bool IsOverdue =>
-            Status != TaskItemStatus.Done && DueDate.Date < DateTime.UtcNow.Date;
+        /// <summary>
+        /// Вычисляемое свойство: просрочена ли задача.
+        /// Не хранится в БД (computed property).
+        /// Правило: DueDate < DateTime.Now && Status != Done
+        /// </summary>
+        [NotMapped]
+        public bool IsOverdue => DueDate < DateTime.Now && Status != TaskItemStatus.Done;
     }
 }

@@ -6,16 +6,33 @@ namespace TaskTracker.Application.DTOs
     public class TaskDto
     {
         public int Id { get; set; }
-        public string Title { get; set; }
-        public string Description { get; set; }
+
+        public string Title { get; set; } = string.Empty;
+
+        public string? Description { get; set; }
+
         public int AssigneeId { get; set; }
-        public string AssigneeName { get; set; }
+
+        public string? AssigneeName { get; set; }
+
         public DateTime CreatedAt { get; set; }
+
         public DateTime DueDate { get; set; }
+
         public DateTime? CompletedAt { get; set; }
+
+        /// <summary>
+        /// Фактический статус для отображения на клиенте.
+        /// Если задача просрочена (IsOverdue == true) — возвращается "Overdue",
+        /// иначе возвращается Status.ToString().
+        /// Пример: "New", "InProgress", "Done", "Overdue".
+        /// </summary>
+        public string EffectiveStatus { get; set; } = string.Empty;
+
         public TaskItemStatus Status { get; set; }
+
         public TaskPriority Priority { get; set; }
-        public bool IsOverdue { get; set; }
+
         public List<string> Tags { get; set; } = new();
 
         public static TaskDto FromEntity(TaskItem task)
@@ -32,8 +49,8 @@ namespace TaskTracker.Application.DTOs
                 CompletedAt = task.CompletedAt,
                 Status = task.Status,
                 Priority = task.Priority,
-                IsOverdue = task.IsOverdue,
-                Tags = task.TaskTags?.Select(tt => tt.Tag.Name).ToList() ?? new()
+                Tags = task.TaskTags.Select(tt => tt.Tag.Name).ToList(),
+                EffectiveStatus = task.IsOverdue ? "Overdue" : task.Status.ToString()
             };
         }
     }

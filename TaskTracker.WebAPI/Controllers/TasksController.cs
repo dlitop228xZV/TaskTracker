@@ -25,8 +25,18 @@ namespace TaskTracker.WebAPI.Controllers
         /// GET /api/tasks
         /// GET /api/tasks?assigneeId=2
         /// GET /api/tasks?dueBefore=2026-02-20
-        /// GET /api/tasks?dueAfter=2026-02-01&dueBefore=2026-02-20
-        /// GET /api/tasks?status=InProgress&assigneeId=2&dueBefore=2026-02-20
+        /// GET /api/tasks?dueAfter=2026-02-01&amp;dueBefore=2026-02-20
+        /// GET /api/tasks?status=InProgress&amp;assigneeId=2&amp;dueBefore=2026-02-20
+        ///
+        /// Пример фрагмента ответа (важное поле EffectiveStatus):
+        /// [
+        ///   {
+        ///     "id": 1,
+        ///     "title": "Fix bug",
+        ///     "status": "InProgress",
+        ///     "effectiveStatus": "Overdue"
+        ///   }
+        /// ]
         /// </remarks>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -40,9 +50,6 @@ namespace TaskTracker.WebAPI.Controllers
             [FromQuery] DateTime? dueAfter,
             [FromQuery] List<int> tagIds)
         {
-            // Старый функционал фильтрации оставляем как есть.
-            // Новая логика: если НЕ задан status и НЕ заданы tagIds,
-            // то используем расширенный GetAllTasksAsync (assigneeId + dueBefore + dueAfter).
             var hasStatus = status.HasValue;
             var hasTags = tagIds != null && tagIds.Any();
 
@@ -64,9 +71,6 @@ namespace TaskTracker.WebAPI.Controllers
 
             return Ok(tasks);
         }
-
-        // Остальной код контроллера НЕ ТРОГАЕМ (оставляем как в проекте)
-        // Ниже — оригинальные методы:
 
         [HttpGet("{id}")]
         [SwaggerOperation(Summary = "Получить задачу по ID", Description = "Возвращает детальную информацию о задаче")]

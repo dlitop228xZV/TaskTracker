@@ -36,7 +36,7 @@ namespace TaskTracker.Application.Services
 
         public async Task<List<TaskDto>> GetAllTasksAsync()
         {
-            // Старый метод — оставляем. Теперь он использует новую перегрузку.
+            // Старый метод оставляем для обратной совместимости.
             return await GetAllTasksAsync(assigneeId: null, dueBefore: null, dueAfter: null);
         }
 
@@ -83,7 +83,6 @@ namespace TaskTracker.Application.Services
             return await _taskRepository.AddAsync(task);
         }
 
-        // Старый метод — НЕ УДАЛЯЕМ
         public async Task<List<TaskDto>> GetFilteredTasksAsync(
             string status = null,
             int? assigneeId = null,
@@ -143,7 +142,10 @@ namespace TaskTracker.Application.Services
                 CompletedAt = t.CompletedAt,
                 Status = t.Status,
                 Priority = t.Priority,
-                Tags = t.TaskTags.Select(tt => tt.Tag.Name).ToList()
+                Tags = t.TaskTags.Select(tt => tt.Tag.Name).ToList(),
+
+                // ✅ Новое поле по ТЗ
+                EffectiveStatus = t.IsOverdue ? "Overdue" : t.Status.ToString()
             }).ToList();
         }
 
@@ -183,17 +185,15 @@ namespace TaskTracker.Application.Services
                 task.DueDate = updateDto.DueDate.Value;
             }
 
-            // 3. Обновить статус с логикой CompletedAt (это и тестируем)
+            // 3. Обновить статус с логикой CompletedAt
             if (updateDto.Status.HasValue)
             {
                 var newStatus = updateDto.Status.Value;
 
-                // Если переводим в Done и задача ещё не была Done
                 if (newStatus == TaskItemStatus.Done && task.Status != TaskItemStatus.Done)
                 {
                     task.CompletedAt = DateTime.UtcNow;
                 }
-                // Если убираем из Done
                 else if (newStatus != TaskItemStatus.Done && task.Status == TaskItemStatus.Done)
                 {
                     task.CompletedAt = null;
@@ -249,7 +249,7 @@ namespace TaskTracker.Application.Services
             await _taskRepository.UpdateAsync(task);
             await _context.SaveChangesAsync();
 
-            // 7. Вернуть обновлённую задачу
+            // 7. Вернуть обновлённую задачу с загруженными связями
             return await _taskRepository.GetByIdAsync(id);
         }
 

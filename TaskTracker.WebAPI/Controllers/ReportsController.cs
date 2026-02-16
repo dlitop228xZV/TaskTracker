@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Swashbuckle.AspNetCore.Annotations;
 using TaskTracker.Application.DTOs;
-using TaskTracker.Domain.Enums;
-using TaskTracker.Infrastructure.Data;
+using TaskTracker.Application.Interfaces;
 
 namespace TaskTracker.WebAPI.Controllers
 {
@@ -10,26 +9,32 @@ namespace TaskTracker.WebAPI.Controllers
     [ApiController]
     public class ReportsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IReportService _reportService;
 
-        public ReportsController(AppDbContext context)
+        public ReportsController(IReportService reportService)
         {
-            _context = context;
+            _reportService = reportService;
         }
 
-        // GET: api/reports/status-summary
+        /// <summary>
+        /// Сводка по статусам задач (включая Overdue).
+        /// </summary>
+        /// <remarks>
+        /// Пример ответа:
+        /// [
+        ///   {"status":"New","count":5},
+        ///   {"status":"InProgress","count":3},
+        ///   {"status":"Done","count":12},
+        ///   {"status":"Overdue","count":2}
+        /// ]
+        /// </remarks>
         [HttpGet("status-summary")]
-        public async Task<IActionResult> GetStatusSummary()
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Сводка задач по статусам", Description = "Группировка по EffectiveStatus с учётом Overdue.")]
+        [SwaggerResponse(200, "Успешный запрос", typeof(List<StatusSummaryItemDto>))]
+        public async Task<ActionResult<List<StatusSummaryItemDto>>> GetStatusSummary()
         {
-            var summary = new
-            {
-                New = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.New),
-                InProgress = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.InProgress),
-                Done = await _context.Tasks.CountAsync(t => t.Status == TaskItemStatus.Done),
-                Overdue = await _context.Tasks.CountAsync(t =>
-                    t.Status != TaskItemStatus.Done && t.DueDate.Date < DateTime.UtcNow.Date)
-            };
-
+            var summary = await _reportService.GetStatusSummaryAsync();
             return Ok(summary);
         }
     }

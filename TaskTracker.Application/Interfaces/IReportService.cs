@@ -4,8 +4,10 @@ namespace TaskTracker.Application.Interfaces
 {
     public interface IReportService
     {
-        Task<Dictionary<string, int>> GetStatusSummaryAsync();
-        Task<Dictionary<string, List<TaskDto>>> GetOverdueTasksByAssigneeAsync();
-        Task<double?> GetAverageCompletionTimeInDaysAsync();
+        /// <summary>
+        /// Сводка по статусам задач с учётом Overdue (computed, не хранится в БД).
+        /// Группируем по EffectiveStatus: Overdue или Status.ToString().
+        /// </summary>
+        Task<List<StatusSummaryItemDto>> GetStatusSummaryAsync();
     }
 }

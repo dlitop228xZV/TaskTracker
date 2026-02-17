@@ -37,5 +37,28 @@ namespace TaskTracker.WebAPI.Controllers
             var summary = await _reportService.GetStatusSummaryAsync();
             return Ok(summary);
         }
+
+        /// <summary>
+        /// Просроченные задачи по исполнителям (группировка + детализация).
+        /// </summary>
+        /// <remarks>
+        /// Пример ответа:
+        /// [
+        ///   {
+        ///     "assignee": "Иванов И.И.",
+        ///     "overdueCount": 2,
+        ///     "tasks": [ { ...taskDto... }, { ...taskDto... } ]
+        ///   }
+        /// ]
+        /// </remarks>
+        [HttpGet("overdue-by-assignee")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [SwaggerOperation(Summary = "Просроченные задачи по исполнителям", Description = "Фильтрует IsOverdue=true, группирует по исполнителям, возвращает детализацию.")]
+        [SwaggerResponse(200, "Успешный запрос", typeof(List<OverdueByAssigneeDto>))]
+        public async Task<ActionResult<List<OverdueByAssigneeDto>>> GetOverdueByAssignee()
+        {
+            var result = await _reportService.GetOverdueByAssigneeAsync();
+            return Ok(result);
+        }
     }
 }

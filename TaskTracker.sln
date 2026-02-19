@@ -13,6 +13,27 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskTracker.WebAPI", "TaskT
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TaskTracker.Tests", "TaskTracker.Tests\TaskTracker.Tests.csproj", "{78D7FA89-E2B9-4FE0-9DB8-8E5EA3952EA2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TaskTracker.Frontend", "TaskTracker.Frontend", "{36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}"
+	ProjectSection(SolutionItems) = preProject
+		index.html = index.html
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "css", "css", "{5635A516-06B8-49C8-AAA3-7E17B24383AB}"
+	ProjectSection(SolutionItems) = preProject
+		style.css = style.css
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "js", "js", "{F086E3DC-4713-415B-9916-9BA86FC59FCD}"
+	ProjectSection(SolutionItems) = preProject
+		main.js = main.js
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "pages", "pages", "{7193BDAB-83A7-4006-8DFC-FAA0F208EF93}"
+	ProjectSection(SolutionItems) = preProject
+		reports.html = reports.html
+		tasks.html = tasks.html
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,5 +107,13 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{5635A516-06B8-49C8-AAA3-7E17B24383AB} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
+		{F086E3DC-4713-415B-9916-9BA86FC59FCD} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
+		{7193BDAB-83A7-4006-8DFC-FAA0F208EF93} = {36D591C7-65C7-A0D1-1CBC-10CDE441BDC8}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4EE65AB1-FC35-414D-80F0-6541CEBC8F72}
 	EndGlobalSection
 EndGlobal

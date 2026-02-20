@@ -1,5 +1,6 @@
 ﻿using TaskTracker.Application.DTOs;
 using TaskTracker.Application.Interfaces;
+using TaskTracker.Domain.Enums;
 using TaskTracker.Domain.Interfaces;
 
 namespace TaskTracker.Application.Services
@@ -40,7 +41,6 @@ namespace TaskTracker.Application.Services
                 .GroupBy(t => t.AssigneeId)
                 .Select(g =>
                 {
-                    // Берём имя исполнителя из первой задачи группы (репозиторий грузит Assignee через Include)
                     var first = g.FirstOrDefault();
                     var assigneeName = first?.Assignee?.Name;
 
@@ -49,19 +49,32 @@ namespace TaskTracker.Application.Services
                         Assignee = !string.IsNullOrWhiteSpace(assigneeName)
                             ? assigneeName
                             : $"User#{g.Key}",
-
                         OverdueCount = g.Count(),
-
-                        // Детализация: только просроченные задачи
                         Tasks = g.Select(TaskDto.FromEntity).ToList()
                     };
                 })
-                // Чтобы выдача была стабильная: сначала у кого больше просроченных
                 .OrderByDescending(x => x.OverdueCount)
                 .ThenBy(x => x.Assignee)
                 .ToList();
 
             return result;
+        }
+
+        public async Task<double?> GetAvgCompletionTimeAsync()
+        {
+            var tasks = await _taskRepository.GetAllAsync();
+
+            var doneTasks = tasks
+                .Where(t => t.Status == TaskItemStatus.Done && t.CompletedAt.HasValue)
+                .ToList();
+
+            if (!doneTasks.Any())
+                return null;
+
+            var avgDays = doneTasks
+                .Average(t => (t.CompletedAt!.Value - t.CreatedAt).TotalDays);
+
+            return avgDays;
         }
     }
 }

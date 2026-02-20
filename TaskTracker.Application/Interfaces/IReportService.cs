@@ -16,5 +16,12 @@ namespace TaskTracker.Application.Interfaces
         /// возвращаем исполнителя + количество + список TaskDto.
         /// </summary>
         Task<List<OverdueByAssigneeDto>> GetOverdueByAssigneeAsync();
+
+        /// <summary>
+        /// Среднее время закрытия задач в днях.
+        /// Берём только задачи со Status=Done и CompletedAt != null.
+        /// Возвращает null, если завершённых задач нет.
+        /// </summary>
+        Task<double?> GetAvgCompletionTimeAsync();
     }
 }

@@ -1,64 +1,80 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Annotations;
-using TaskTracker.Application.DTOs;
+﻿using TaskTracker.Application.DTOs;
 using TaskTracker.Application.Interfaces;
+using TaskTracker.Domain.Enums;
+using TaskTracker.Domain.Interfaces;
 
-namespace TaskTracker.WebAPI.Controllers
+namespace TaskTracker.Application.Services
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ReportsController : ControllerBase
+    public class ReportService : IReportService
     {
-        private readonly IReportService _reportService;
+        private readonly ITaskRepository _taskRepository;
 
-        public ReportsController(IReportService reportService)
+        public ReportService(ITaskRepository taskRepository)
         {
-            _reportService = reportService;
+            _taskRepository = taskRepository;
         }
 
-        /// <summary>
-        /// Сводка по статусам задач (включая Overdue).
-        /// </summary>
-        /// <remarks>
-        /// Пример ответа:
-        /// [
-        ///   {"status":"New","count":5},
-        ///   {"status":"InProgress","count":3},
-        ///   {"status":"Done","count":12},
-        ///   {"status":"Overdue","count":2}
-        /// ]
-        /// </remarks>
-        [HttpGet("status-summary")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [SwaggerOperation(Summary = "Сводка задач по статусам", Description = "Группировка по EffectiveStatus с учётом Overdue.")]
-        [SwaggerResponse(200, "Успешный запрос", typeof(List<StatusSummaryItemDto>))]
-        public async Task<ActionResult<List<StatusSummaryItemDto>>> GetStatusSummary()
+        public async Task<List<StatusSummaryItemDto>> GetStatusSummaryAsync()
         {
-            var summary = await _reportService.GetStatusSummaryAsync();
-            return Ok(summary);
+            var tasks = await _taskRepository.GetAllAsync();
+
+            var result = tasks
+                .GroupBy(t => t.IsOverdue ? "Overdue" : t.Status.ToString())
+                .Select(g => new StatusSummaryItemDto
+                {
+                    Status = g.Key,
+                    Count = g.Count()
+                })
+                .OrderBy(x => x.Status)
+                .ToList();
+
+            return result;
         }
 
-        /// <summary>
-        /// Просроченные задачи по исполнителям (группировка + детализация).
-        /// </summary>
-        /// <remarks>
-        /// Пример ответа:
-        /// [
-        ///   {
-        ///     "assignee": "Иванов И.И.",
-        ///     "overdueCount": 2,
-        ///     "tasks": [ { ...taskDto... }, { ...taskDto... } ]
-        ///   }
-        /// ]
-        /// </remarks>
-        [HttpGet("overdue-by-assignee")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [SwaggerOperation(Summary = "Просроченные задачи по исполнителям", Description = "Фильтрует IsOverdue=true, группирует по исполнителям, возвращает детализацию.")]
-        [SwaggerResponse(200, "Успешный запрос", typeof(List<OverdueByAssigneeDto>))]
-        public async Task<ActionResult<List<OverdueByAssigneeDto>>> GetOverdueByAssignee()
+        public async Task<List<OverdueByAssigneeDto>> GetOverdueByAssigneeAsync()
         {
-            var result = await _reportService.GetOverdueByAssigneeAsync();
-            return Ok(result);
+            var tasks = await _taskRepository.GetAllAsync();
+
+            var overdue = tasks.Where(t => t.IsOverdue).ToList();
+
+            var result = overdue
+                .GroupBy(t => t.AssigneeId)
+                .Select(g =>
+                {
+                    var first = g.FirstOrDefault();
+                    var assigneeName = first?.Assignee?.Name;
+
+                    return new OverdueByAssigneeDto
+                    {
+                        Assignee = !string.IsNullOrWhiteSpace(assigneeName)
+                            ? assigneeName
+                            : $"User#{g.Key}",
+                        OverdueCount = g.Count(),
+                        Tasks = g.Select(TaskDto.FromEntity).ToList()
+                    };
+                })
+                .OrderByDescending(x => x.OverdueCount)
+                .ThenBy(x => x.Assignee)
+                .ToList();
+
+            return result;
+        }
+
+        public async Task<double?> GetAvgCompletionTimeAsync()
+        {
+            var tasks = await _taskRepository.GetAllAsync();
+
+            var doneTasks = tasks
+                .Where(t => t.Status == TaskItemStatus.Done && t.CompletedAt.HasValue)
+                .ToList();
+
+            if (!doneTasks.Any())
+                return null;
+
+            var avgDays = doneTasks
+                .Average(t => (t.CompletedAt!.Value - t.CreatedAt).TotalDays);
+
+            return avgDays;
         }
     }
 }

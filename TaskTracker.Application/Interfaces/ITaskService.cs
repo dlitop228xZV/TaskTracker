@@ -7,17 +7,25 @@ namespace TaskTracker.Application.Interfaces
     {
         Task<TaskItem> GetTaskByIdAsync(int id);
 
+        // Старый метод — НЕ УДАЛЯЕМ
         Task<List<TaskDto>> GetAllTasksAsync();
 
-        /// <summary>
-        /// Получить список задач с опциональной фильтрацией по исполнителю и диапазону дедлайна.
-        /// </summary>
-        /// <param name="assigneeId">Фильтр по исполнителю</param>
-        /// <param name="dueBefore">DueDate <= dueBefore</param>
-        /// <param name="dueAfter">DueDate >= dueAfter</param>
+        // Старый расширенный метод — НЕ УДАЛЯЕМ (если у тебя уже был)
         Task<List<TaskDto>> GetAllTasksAsync(int? assigneeId, DateTime? dueBefore, DateTime? dueAfter);
 
+        /// <summary>
+        /// Получить список задач с опциональной фильтрацией по исполнителю, диапазону дедлайна и тегам.
+        /// tagIds: список id тегов; задача подходит если имеет хотя бы один из них.
+        /// </summary>
+        Task<List<TaskDto>> GetAllTasksAsync(
+            int? assigneeId,
+            DateTime? dueBefore,
+            DateTime? dueAfter,
+            List<int>? tagIds);
+
         Task<TaskItem> CreateTaskAsync(CreateTaskDto createDto);
+
+        // Старый метод фильтрации — НЕ УДАЛЯЕМ
         Task<List<TaskDto>> GetFilteredTasksAsync(
             string status = null,
             int? assigneeId = null,

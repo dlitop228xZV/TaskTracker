@@ -20,7 +20,7 @@ namespace TaskTracker.Infrastructure.Data.Repositories
             return await _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.TaskTags)
-                .ThenInclude(tt => tt.Tag)
+                    .ThenInclude(tt => tt.Tag)
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
@@ -29,34 +29,34 @@ namespace TaskTracker.Infrastructure.Data.Repositories
             return await _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.TaskTags)
-                .ThenInclude(tt => tt.Tag)
+                    .ThenInclude(tt => tt.Tag)
                 .ToListAsync();
         }
 
         public async Task<List<TaskItem>> GetAllAsync(int? assigneeId, DateTime? dueBefore, DateTime? dueAfter)
         {
+            return await GetAllAsync(assigneeId, dueBefore, dueAfter, tagIds: null);
+        }
+
+        public async Task<List<TaskItem>> GetAllAsync(int? assigneeId, DateTime? dueBefore, DateTime? dueAfter, List<int>? tagIds)
+        {
             var query = _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.TaskTags)
-                .ThenInclude(tt => tt.Tag)
+                    .ThenInclude(tt => tt.Tag)
                 .AsQueryable();
 
             if (assigneeId.HasValue)
-            {
                 query = query.Where(t => t.AssigneeId == assigneeId.Value);
-            }
 
-            // dueBefore: DueDate <= date
             if (dueBefore.HasValue)
-            {
                 query = query.Where(t => t.DueDate <= dueBefore.Value);
-            }
 
-            // dueAfter: DueDate >= date
             if (dueAfter.HasValue)
-            {
                 query = query.Where(t => t.DueDate >= dueAfter.Value);
-            }
+
+            if (tagIds != null && tagIds.Any())
+                query = query.Where(t => t.TaskTags.Any(tt => tagIds.Contains(tt.TagId)));
 
             return await query.ToListAsync();
         }
@@ -84,6 +84,7 @@ namespace TaskTracker.Infrastructure.Data.Repositories
             _context.Tasks.Remove(entity);
             await _context.SaveChangesAsync();
         }
+
         public async Task<List<TaskItem>> GetFilteredAsync(
             string status = null,
             int? assigneeId = null,
@@ -94,36 +95,26 @@ namespace TaskTracker.Infrastructure.Data.Repositories
             var query = _context.Tasks
                 .Include(t => t.Assignee)
                 .Include(t => t.TaskTags)
-                .ThenInclude(tt => tt.Tag)
+                    .ThenInclude(tt => tt.Tag)
                 .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(status))
             {
                 if (Enum.TryParse<TaskItemStatus>(status, true, out var statusEnum))
-                {
                     query = query.Where(t => t.Status == statusEnum);
-                }
             }
 
             if (assigneeId.HasValue)
-            {
                 query = query.Where(t => t.AssigneeId == assigneeId.Value);
-            }
 
             if (dueBefore.HasValue)
-            {
                 query = query.Where(t => t.DueDate <= dueBefore.Value);
-            }
 
             if (dueAfter.HasValue)
-            {
                 query = query.Where(t => t.DueDate >= dueAfter.Value);
-            }
 
             if (tagIds != null && tagIds.Any())
-            {
                 query = query.Where(t => t.TaskTags.Any(tt => tagIds.Contains(tt.TagId)));
-            }
 
             return await query.ToListAsync();
         }

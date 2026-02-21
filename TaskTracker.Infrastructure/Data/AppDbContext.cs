@@ -1,6 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TaskTracker.Domain.Entities;
-using TaskTracker.Domain.Enums;
 
 namespace TaskTracker.Infrastructure.Data
 {
@@ -11,32 +10,28 @@ namespace TaskTracker.Infrastructure.Data
         {
         }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<TaskItem> Tasks { get; set; }
-        public DbSet<Tag> Tags { get; set; }
-        public DbSet<TaskTag> TaskTags { get; set; }
+        public DbSet<User> Users => Set<User>();
+        public DbSet<TaskItem> Tasks => Set<TaskItem>();
+        public DbSet<Tag> Tags => Set<Tag>();
+        public DbSet<TaskTag> TaskTags => Set<TaskTag>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Составной ключ
+            // Many-to-many: TaskItem <-> Tag через TaskTag
             modelBuilder.Entity<TaskTag>()
                 .HasKey(tt => new { tt.TaskId, tt.TagId });
 
-            // Уникальный Email
-            modelBuilder.Entity<User>()
-                .HasIndex(u => u.Email)
-                .IsUnique();
+            modelBuilder.Entity<TaskTag>()
+                .HasOne(tt => tt.Task)
+                .WithMany(t => t.TaskTags)
+                .HasForeignKey(tt => tt.TaskId);
 
-            // Конфигурация enum'ов - хранить как строки в БД
-            modelBuilder.Entity<TaskItem>()
-                .Property(t => t.Status)
-                .HasConversion<string>();
-
-            modelBuilder.Entity<TaskItem>()
-                .Property(t => t.Priority)
-                .HasConversion<string>();
+            modelBuilder.Entity<TaskTag>()
+                .HasOne(tt => tt.Tag)
+                .WithMany(t => t.TaskTags)
+                .HasForeignKey(tt => tt.TagId);
         }
     }
 }

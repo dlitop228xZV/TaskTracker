@@ -29,7 +29,7 @@ namespace TaskTracker.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tags");
+                    b.ToTable("Tags", (string)null);
                 });
 
             modelBuilder.Entity("TaskTracker.Domain.Entities.TaskItem", b =>
@@ -71,7 +71,7 @@ namespace TaskTracker.Infrastructure.Migrations
 
                     b.HasIndex("AssigneeId");
 
-                    b.ToTable("Tasks");
+                    b.ToTable("Tasks", (string)null);
                 });
 
             modelBuilder.Entity("TaskTracker.Domain.Entities.TaskTag", b =>
@@ -86,7 +86,7 @@ namespace TaskTracker.Infrastructure.Migrations
 
                     b.HasIndex("TagId");
 
-                    b.ToTable("TaskTags");
+                    b.ToTable("TaskTags", (string)null);
                 });
 
             modelBuilder.Entity("TaskTracker.Domain.Entities.User", b =>
@@ -108,7 +108,7 @@ namespace TaskTracker.Infrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("TaskTracker.Domain.Entities.TaskItem", b =>

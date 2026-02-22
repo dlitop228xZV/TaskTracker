@@ -1,36 +1,53 @@
-// Основной файл JavaScript для главной страницы
+// Shared UI helpers (ES module)
+
+export function formatDate(value) {
+  if (!value) return 'вЂ”';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString('ru-RU', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+}
+
+export function escapeHtml(str) {
+  return String(str ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+export function showLoading(container, text = 'Р—Р°РіСЂСѓР·РєР°...') {
+  if (!container) return;
+  container.innerHTML = `<p class="text-muted text-center">${escapeHtml(text)}</p>`;
+}
+
+export function showError(container, message = 'РћС€РёР±РєР°') {
+  if (!container) return;
+  container.innerHTML = `<p class="text-muted text-center" style="color: var(--danger-color)">${escapeHtml(message)}</p>`;
+}
+
+export function setActiveNavLink() {
+  const currentPath = window.location.pathname.replace(/\\/g, '/');
+  document.querySelectorAll('.nav__link').forEach(link => {
+    const href = link.getAttribute('href');
+    if (!href) return;
+
+    // Works both for /index.html and /pages/tasks.html etc.
+    const normalizedHref = href.startsWith('/') ? href : `/${href.replace(/^\.\//, '')}`;
+    if (currentPath.endsWith(href) || currentPath === normalizedHref) {
+      link.classList.add('nav__link--active');
+    } else {
+      link.classList.remove('nav__link--active');
+    }
+  });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Task Tracker приложение загружено');
-
-    // Подсветка активной ссылки в навигации
-    const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.nav__link');
-
-    navLinks.forEach(link => {
-        if (link.getAttribute('href') === currentPath) {
-            link.classList.add('nav__link--active');
-        }
-    });
-
-    // Здесь будет логика загрузки данных с API
-    // loadDashboardData();
+  setActiveNavLink();
 });
-
-// Функция для загрузки данных дашборда (будет реализована позже)
-async function loadDashboardData() {
-    try {
-        // Пример будущего API-запроса
-        // const response = await fetch('/api/reports/status-summary');
-        // const data = await response.json();
-        // updateDashboard(data);
-    } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
-    }
-}
-
-// Функция обновления дашборда
-function updateDashboard(data) {
-    // Здесь будет логика обновления статистики на странице
-    console.log('Обновление данных дашборда:', data);
-}

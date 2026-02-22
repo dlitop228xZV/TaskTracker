@@ -321,6 +321,21 @@ body {
     color: white;
 }
 
+/* --- Small additions for runtime statuses used in JS --- */
+.task-status {
+    display: inline-block;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    background: var(--light-color);
+}
+
+.status-overdue {
+    background: rgba(247, 37, 133, 0.12);
+    color: var(--danger-color);
+    font-weight: 600;
+}
+
     .btn--primary:hover {
         background-color: var(--secondary-color);
     }

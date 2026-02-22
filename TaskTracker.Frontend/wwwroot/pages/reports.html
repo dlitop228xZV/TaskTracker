@@ -1,11 +1,67 @@
-﻿<!DOCTYPE html>
-
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html>
+<html lang="ru">
 <head>
-    <meta charset="utf-8" />
-    <title></title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Tracker - Отчёты</title>
+  <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
+<header class="header">
+  <div class="container header__container">
+    <div class="logo">
+      <a href="../index.html" class="logo__link"><span class="logo__text">Task Tracker</span></a>
+    </div>
+    <nav class="nav">
+      <ul class="nav__list">
+        <li class="nav__item"><a href="../index.html" class="nav__link">Главная</a></li>
+        <li class="nav__item"><a href="tasks.html" class="nav__link">Задачи</a></li>
+        <li class="nav__item"><a href="reports.html" class="nav__link nav__link--active">Отчёты</a></li>
+      </ul>
+    </nav>
+    <div class="user-menu">
+      <button class="user-menu__button" type="button">
+        <span class="user-menu__name">Администратор</span>
+        <span class="user-menu__avatar">👤</span>
+      </button>
+    </div>
+  </div>
+</header>
 
+<main class="main">
+  <div class="container">
+    <h1 style="margin-top:0;">Отчёты</h1>
+
+    <section style="background:#fff; border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 16px; margin-bottom: 16px;">
+      <h2 style="margin:0 0 12px 0; font-size:1.1rem;">Количество задач по статусам</h2>
+      <div id="rStatus"></div>
+    </section>
+
+    <section style="background:#fff; border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 16px; margin-bottom: 16px;">
+      <h2 style="margin:0 0 12px 0; font-size:1.1rem;">Просроченные задачи по исполнителям</h2>
+      <div id="rOverdue"></div>
+    </section>
+
+    <section style="background:#fff; border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 16px;">
+      <h2 style="margin:0 0 12px 0; font-size:1.1rem;">Среднее время закрытия</h2>
+      <div id="rAvg"></div>
+    </section>
+
+    <p class="text-muted" style="margin-top: 12px;">Если отчёты не грузятся — проверьте, что в API реально существуют эндпоинты /api/reports/*.</p>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container footer__container">
+    <div class="footer__info"><p class="footer__copyright">&copy; 2026 Task Tracker. Учебный проект.</p></div>
+    <div class="footer__links">
+      <a href="#" class="footer__link">О проекте</a>
+      <a href="#" class="footer__link">Помощь</a>
+      <a href="#" class="footer__link">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="../js/reports.js"></script>
 </body>
 </html>

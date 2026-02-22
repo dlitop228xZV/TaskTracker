@@ -1,62 +1,155 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Tracker - Задачи</title>
-    <link rel="stylesheet" href="../css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Task Tracker - Задачи</title>
+  <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body>
-    <header class="header">
-        <!-- Аналогичный header как в index.html -->
-        <div class="container header__container">
-            <div class="logo">
-                <a href="../index.html" class="logo__link">
-                    <span class="logo__text">Task Tracker</span>
-                </a>
-            </div>
-            <nav class="nav">
-                <ul class="nav__list">
-                    <li class="nav__item">
-                        <a href="../index.html" class="nav__link">Главная</a>
-                    </li>
-                    <li class="nav__item">
-                        <a href="tasks.html" class="nav__link nav__link--active">Задачи</a>
-                    </li>
-                    <li class="nav__item">
-                        <a href="reports.html" class="nav__link">Отчёты</a>
-                    </li>
-                </ul>
-            </nav>
-            <div class="user-menu">
-                <button class="user-menu__button">
-                    <span class="user-menu__name">Администратор</span>
-                    <span class="user-menu__avatar">👤</span>
-                </button>
-            </div>
-        </div>
-    </header>
+<header class="header">
+  <div class="container header__container">
+    <div class="logo">
+      <a href="../index.html" class="logo__link"><span class="logo__text">Task Tracker</span></a>
+    </div>
+    <nav class="nav">
+      <ul class="nav__list">
+        <li class="nav__item"><a href="../index.html" class="nav__link">Главная</a></li>
+        <li class="nav__item"><a href="tasks.html" class="nav__link nav__link--active">Задачи</a></li>
+        <li class="nav__item"><a href="reports.html" class="nav__link">Отчёты</a></li>
+      </ul>
+    </nav>
+    <div class="user-menu">
+      <button class="user-menu__button" type="button">
+        <span class="user-menu__name">Администратор</span>
+        <span class="user-menu__avatar">👤</span>
+      </button>
+    </div>
+  </div>
+</header>
 
-    <main class="main">
-        <div class="container">
-            <h1>Управление задачами</h1>
-            <p>Страница в разработке. Здесь будет список задач и форма создания.</p>
-            <a href="../index.html" class="btn btn--primary">Вернуться на главную</a>
-        </div>
-    </main>
+<main class="main">
+  <div class="container">
+    <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; margin-bottom: 16px;">
+      <h1 style="margin:0;">Управление задачами</h1>
+      <button id="btnNew" class="btn btn--primary" type="button">+ Новая задача</button>
+    </div>
 
-    <footer class="footer">
-        <!-- Аналогичный footer как в index.html -->
-        <div class="container footer__container">
-            <div class="footer__info">
-                <p class="footer__copyright">&copy; 2026 Task Tracker. Учебный проект.</p>
-            </div>
-            <div class="footer__links">
-                <a href="#" class="footer__link">О проекте</a>
-                <a href="#" class="footer__link">Помощь</a>
-                <a href="#" class="footer__link">GitHub</a>
-            </div>
+    <section style="background:#fff; border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 16px; margin-bottom: 16px;">
+      <h2 style="margin:0 0 12px 0; font-size:1.1rem;">Фильтры</h2>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px;">
+        <label>
+          <div class="text-muted" style="font-size:0.9rem;">Статус</div>
+          <select id="fStatus" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;">
+            <option value="">Все</option>
+            <option value="New">New</option>
+            <option value="InProgress">InProgress</option>
+            <option value="Done">Done</option>
+            <option value="Overdue">Overdue</option>
+          </select>
+        </label>
+
+        <label>
+          <div class="text-muted" style="font-size:0.9rem;">Исполнитель</div>
+          <select id="fAssignee" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;">
+            <option value="">Все</option>
+          </select>
+        </label>
+
+        <label>
+          <div class="text-muted" style="font-size:0.9rem;">Дедлайн после</div>
+          <input id="fDueAfter" type="date" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;" />
+        </label>
+
+        <label>
+          <div class="text-muted" style="font-size:0.9rem;">Дедлайн до</div>
+          <input id="fDueBefore" type="date" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;" />
+        </label>
+
+        <div style="display:flex; gap: 10px; align-items:flex-end;">
+          <button id="btnApply" class="btn btn--primary" type="button" style="flex:1;">Применить</button>
+          <button id="btnReset" class="btn" type="button" style="flex:1; border:1px solid #e5e7eb;">Сброс</button>
         </div>
-    </footer>
+      </div>
+      <p class="text-muted" style="margin-top:10px;">Теги (tagIds) не вынесены в UI — но API клиент их поддерживает.</p>
+    </section>
+
+    <section style="background:#fff; border-radius: var(--border-radius); box-shadow: var(--box-shadow); padding: 16px;">
+      <div id="tasksContainer"></div>
+    </section>
+  </div>
+</main>
+
+<!-- Простое модальное окно -->
+<div id="modal" style="position:fixed; inset:0; background: rgba(0,0,0,0.45); display:none; align-items:center; justify-content:center; padding: 16px;">
+  <div style="background:#fff; width:min(720px, 100%); border-radius: 16px; box-shadow: var(--box-shadow); padding: 16px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; gap: 12px;">
+      <h2 id="modalTitle" style="margin:0; font-size: 1.2rem;">Задача</h2>
+      <button id="btnClose" class="btn" type="button" style="border:1px solid #e5e7eb;">Закрыть</button>
+    </div>
+
+    <form id="taskForm" style="margin-top: 12px; display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+      <input type="hidden" id="taskId" />
+
+      <label style="grid-column: 1 / -1;">
+        <div class="text-muted" style="font-size:0.9rem;">Заголовок *</div>
+        <input id="title" required minlength="3" maxlength="200" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;" />
+      </label>
+
+      <label style="grid-column: 1 / -1;">
+        <div class="text-muted" style="font-size:0.9rem;">Описание</div>
+        <textarea id="description" rows="3" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;"></textarea>
+      </label>
+
+      <label>
+        <div class="text-muted" style="font-size:0.9rem;">Исполнитель *</div>
+        <select id="assigneeId" required style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;"></select>
+      </label>
+
+      <label>
+        <div class="text-muted" style="font-size:0.9rem;">Дедлайн *</div>
+        <input id="dueDate" type="datetime-local" required style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;" />
+      </label>
+
+      <label>
+        <div class="text-muted" style="font-size:0.9rem;">Статус</div>
+        <select id="status" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;">
+          <option value="New">New</option>
+          <option value="InProgress">InProgress</option>
+          <option value="Done">Done</option>
+        </select>
+      </label>
+
+      <label>
+        <div class="text-muted" style="font-size:0.9rem;">Приоритет</div>
+        <select id="priority" style="width:100%; padding:10px; border-radius:8px; border: 1px solid #e5e7eb;">
+          <option value="1">Low</option>
+          <option value="2" selected>Medium</option>
+          <option value="3">High</option>
+        </select>
+      </label>
+
+      <div style="grid-column: 1 / -1; display:flex; gap: 10px; justify-content:flex-end; margin-top: 6px;">
+        <button id="btnDelete" class="btn" type="button" style="border:1px solid var(--danger-color); color: var(--danger-color); display:none;">Удалить</button>
+        <button class="btn btn--primary" type="submit">Сохранить</button>
+      </div>
+    </form>
+
+    <div id="formError" class="text-muted" style="margin-top: 10px; color: var(--danger-color);"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container footer__container">
+    <div class="footer__info"><p class="footer__copyright">&copy; 2026 Task Tracker. Учебный проект.</p></div>
+    <div class="footer__links">
+      <a href="#" class="footer__link">О проекте</a>
+      <a href="#" class="footer__link">Помощь</a>
+      <a href="#" class="footer__link">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script type="module" src="../js/tasks.js"></script>
 </body>
 </html>

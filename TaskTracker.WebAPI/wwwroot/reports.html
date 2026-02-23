@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Task Tracker — Отчёты</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/index.html" aria-label="Task Tracker">
+        <span class="brand-badge">TT</span>
+        <span>Task Tracker</span>
+      </a>
+      <nav class="site-nav" aria-label="Навигация">
+        <a class="nav-link" href="/index.html">Задачи</a>
+        <a class="nav-link active" href="/reports.html">Отчёты</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <div class="card-header">
+        <h1 class="card-title">Отчёты</h1>
+        <p class="card-subtitle">Данные берутся из API /api/reports/*</p>
+      </div>
+      <div class="card-body">
+        <div id="reportsError" class="error" style="display:none"></div>
+
+        <section class="report-grid">
+          <section class="card" aria-label="Отчёт по статусам">
+            <div class="card-header">
+              <h2 class="card-title">1) Отчёт по статусам</h2>
+              <p class="card-subtitle">Таблица + простая bar chart (CSS)</p>
+            </div>
+            <div class="card-body">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Статус</th><th>Количество</th></tr>
+                  </thead>
+                  <tbody id="statusSummaryTbody"></tbody>
+                </table>
+              </div>
+              <div class="bars" id="statusBars"></div>
+            </div>
+          </section>
+
+          <section class="card" aria-label="Просроченные по исполнителям">
+            <div class="card-header">
+              <h2 class="card-title">2) Просроченные по исполнителям</h2>
+              <p class="card-subtitle">Группировка по исполнителю</p>
+            </div>
+            <div class="card-body">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Исполнитель</th><th>Просрочено</th><th>Задачи</th></tr>
+                  </thead>
+                  <tbody id="overdueByAssigneeTbody"></tbody>
+                </table>
+              </div>
+              <div id="overdueEmpty" class="notice" style="display:none; margin-top:12px">Просроченных задач нет.</div>
+            </div>
+          </section>
+
+          <section class="card" aria-label="Среднее время закрытия" style="grid-column:1 / -1">
+            <div class="card-header">
+              <h2 class="card-title">3) Среднее время закрытия</h2>
+              <p class="card-subtitle">Среднее (CompletedAt − CreatedAt) в днях по задачам Done</p>
+            </div>
+            <div class="card-body">
+              <div id="avgCompletionBox" class="notice">Загрузка...</div>
+            </div>
+          </section>
+        </section>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>Task Tracker • Reports</span>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/reports-page.js"></script>
+</body>
+</html>

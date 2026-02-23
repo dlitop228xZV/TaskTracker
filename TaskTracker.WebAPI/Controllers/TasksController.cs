@@ -35,16 +35,20 @@ namespace TaskTracker.WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [SwaggerOperation(Summary = "Получить все задачи", Description = "Возвращает список задач. Поддерживает фильтры в query.")]
         [SwaggerResponse(200, "Успешный запрос", typeof(List<TaskDto>))]
-        public async Task<ActionResult<List<TaskDto>>> GetTasks(
-            [FromQuery] TaskItemStatus? status,
+        
+public async Task<ActionResult<List<TaskDto>>> GetTasks(
+            /// <summary>
+            /// Статус для фильтрации. Поддерживает: New/InProgress/Done/Overdue.
+            /// </summary>
+            [FromQuery] string? status,
             [FromQuery] int? assigneeId,
             [FromQuery] DateTime? dueBefore,
             [FromQuery] DateTime? dueAfter,
             [FromQuery] List<int> tagIds)
         {
-            var hasStatus = status.HasValue;
+            var hasStatus = !string.IsNullOrWhiteSpace(status) && status != "All";
 
-            // ✅ Если статус НЕ задан — используем GetAllTasksAsync, который теперь поддерживает tagIds тоже
+            // ✅ Если статус НЕ задан — используем GetAllTasksAsync (поддерживает tagIds)
             if (!hasStatus)
             {
                 var tasks = await _taskService.GetAllTasksAsync(
@@ -56,9 +60,18 @@ namespace TaskTracker.WebAPI.Controllers
                 return Ok(tasks);
             }
 
-            // ✅ Если статус задан — оставляем старый путь GetFilteredTasksAsync (он уже поддерживает tagIds)
+            // ✅ Если статус задан — поддерживаем enum + вычисляемый "Overdue"
+            var normalized = status!.Trim();
+
+            // Разрешаем только ожидаемые значения, иначе вернём 400
+            if (!string.Equals(normalized, "Overdue", StringComparison.OrdinalIgnoreCase)
+                && !Enum.TryParse<TaskItemStatus>(normalized, ignoreCase: true, out _))
+            {
+                return BadRequest(new { error = $"Unsupported status: {status}. Use New/InProgress/Done/Overdue." });
+            }
+
             var filtered = await _taskService.GetFilteredTasksAsync(
-                status?.ToString(),
+                normalized,
                 assigneeId,
                 dueBefore,
                 dueAfter,

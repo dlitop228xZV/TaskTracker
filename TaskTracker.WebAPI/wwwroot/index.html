@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Task Tracker — Задачи</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="/index.html" aria-label="Task Tracker">
+        <span class="brand-badge">TT</span>
+        <span>Task Tracker</span>
+      </a>
+      <nav class="site-nav" aria-label="Навигация">
+        <a class="nav-link active" href="/index.html">Задачи</a>
+        <a class="nav-link" href="/reports.html">Отчёты</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="grid" aria-label="Управление задачами">
+      <!-- Left: create + filters -->
+      <section class="card" aria-label="Создание задачи">
+        <div class="card-header">
+          <h1 class="card-title">Создать задачу</h1>
+          <p class="card-subtitle">Заполните форму и нажмите «Создать».</p>
+        </div>
+        <div class="card-body">
+          <form id="createTaskForm">
+            <div class="field">
+              <label for="title">Title *</label>
+              <input id="title" name="title" type="text" minlength="3" maxlength="200" required placeholder="Например: Исправить баг с логином" />
+            </div>
+
+            <div class="field">
+              <label for="description">Description</label>
+              <textarea id="description" name="description" placeholder="Краткое описание задачи (опционально)"></textarea>
+            </div>
+
+            <div class="inline">
+              <div class="field">
+                <label for="assigneeId">Assignee *</label>
+                <select id="assigneeId" name="assigneeId" required>
+                  <option value="" selected disabled>Загрузка...</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="dueDate">DueDate *</label>
+                <input id="dueDate" name="dueDate" type="date" required />
+              </div>
+            </div>
+
+            <div class="inline">
+              <div class="field">
+                <label for="priority">Priority</label>
+                <select id="priority" name="priority">
+                  <option value="1">Low</option>
+                  <option value="2" selected>Medium</option>
+                  <option value="3">High</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="tagIds">Tags (multiple)</label>
+                <select id="tagIds" name="tagIds" multiple size="4" aria-label="Выберите теги">
+                </select>
+                <div class="muted" style="font-size:12px">Подсказка: Ctrl/⌘ для множественного выбора.</div>
+              </div>
+            </div>
+
+            <div id="createError" class="error" style="display:none"></div>
+
+            <div class="actions">
+              <button class="btn-primary" type="submit" id="createBtn">Создать</button>
+              <button class="btn-ghost" type="button" id="resetBtn">Очистить</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- Right: list + filters -->
+      <section class="card" aria-label="Список задач">
+        <div class="card-header">
+          <h2 class="card-title">Задачи</h2>
+          <p class="card-subtitle">Кликните «Edit», чтобы изменить задачу.</p>
+        </div>
+        <div class="card-body">
+
+          <section class="card" style="border-radius:14px" aria-label="Фильтры">
+            <div class="card-body" style="padding:12px">
+              <div class="inline">
+                <div class="field" style="margin-bottom:0">
+                  <label for="filterStatus">Status</label>
+                  <select id="filterStatus">
+                    <option value="All" selected>All</option>
+                    <option value="New">New</option>
+                    <option value="InProgress">InProgress</option>
+                    <option value="Done">Done</option>
+                    <option value="Overdue">Overdue</option>
+                  </select>
+                </div>
+
+                <div class="field" style="margin-bottom:0">
+                  <label for="filterAssignee">Assignee</label>
+                  <select id="filterAssignee">
+                    <option value="All" selected>All</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="inline">
+                <div class="field" style="margin-bottom:0">
+                  <label for="filterDueAfter">DueDate after</label>
+                  <input id="filterDueAfter" type="date" />
+                </div>
+                <div class="field" style="margin-bottom:0">
+                  <label for="filterDueBefore">DueDate before</label>
+                  <input id="filterDueBefore" type="date" />
+                </div>
+              </div>
+
+              <div class="inline">
+                <div class="field" style="margin-bottom:0">
+                  <label for="filterTagIds">Tags (any)</label>
+                  <select id="filterTagIds" multiple size="4"></select>
+                </div>
+                <div class="actions" style="margin-top:22px">
+                  <button class="btn-secondary" type="button" id="applyFiltersBtn">Применить</button>
+                  <button class="btn-ghost" type="button" id="clearFiltersBtn">Сбросить</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <div id="listError" class="error" style="display:none; margin-top:12px"></div>
+          <div id="emptyState" class="notice" style="display:none; margin-top:12px">Задач пока нет.</div>
+
+          <div class="table-wrap" style="margin-top:12px">
+            <table aria-label="Таблица задач">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Assignee</th>
+                  <th>Status</th>
+                  <th>DueDate</th>
+                  <th>Priority</th>
+                  <th>Tags</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tasksTbody">
+                <!-- rows -->
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </section>
+    </section>
+
+    <!-- Edit modal -->
+    <div class="modal-backdrop" id="editBackdrop" role="dialog" aria-modal="true" aria-label="Редактирование задачи">
+      <section class="card modal">
+        <div class="card-header">
+          <h2 class="card-title">Редактировать задачу</h2>
+          <p class="card-subtitle" id="editSubtitle">Загрузка...</p>
+        </div>
+        <div class="card-body">
+          <form id="editTaskForm">
+            <input type="hidden" id="editId" />
+
+            <div class="field">
+              <label for="editTitle">Title *</label>
+              <input id="editTitle" type="text" minlength="3" maxlength="200" required />
+            </div>
+
+            <div class="field">
+              <label for="editDescription">Description</label>
+              <textarea id="editDescription"></textarea>
+            </div>
+
+            <div class="inline">
+              <div class="field">
+                <label for="editAssigneeId">Assignee</label>
+                <select id="editAssigneeId"></select>
+              </div>
+              <div class="field">
+                <label for="editDueDate">DueDate</label>
+                <input id="editDueDate" type="date" />
+              </div>
+            </div>
+
+            <div class="inline">
+              <div class="field">
+                <label for="editPriority">Priority</label>
+                <select id="editPriority">
+                  <option value="1">Low</option>
+                  <option value="2">Medium</option>
+                  <option value="3">High</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="editStatus">Status</label>
+                <select id="editStatus">
+                  <option value="1">New</option>
+                  <option value="2">InProgress</option>
+                  <option value="3">Done</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="editTagIds">Tags (multiple)</label>
+              <select id="editTagIds" multiple size="4"></select>
+            </div>
+
+            <div id="editError" class="error" style="display:none"></div>
+
+            <div class="actions">
+              <button class="btn-primary" type="submit" id="saveEditBtn">Сохранить</button>
+              <button class="btn-ghost" type="button" id="cancelEditBtn">Отмена</button>
+            </div>
+          </form>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <span>Task Tracker • Front-end (HTML/CSS/JS)</span>
+    </div>
+  </footer>
+
+  <script type="module" src="/js/tasks-page.js"></script>
+</body>
+</html>

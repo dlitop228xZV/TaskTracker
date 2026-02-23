@@ -1,62 +1,192 @@
-* Task Tracker
+# Task Tracker
 
-Task Tracker — учебное веб-приложение для управления задачами.  
-Проект реализован с использованием ASP.NET Core Web API и слоистой архитектуры (N-Layer).
+Task Tracker --- это веб-приложение для управления задачами с поддержкой
+фильтрации, отчётов, статусов и аналитики.
 
-Приложение позволяет:
+Проект реализован по архитектуре Clean Architecture с разделением на
+слои:
 
-- Создавать, редактировать и удалять задачи
-- Назначать исполнителей
-- Устанавливать дедлайн и приоритет
-- Фильтровать задачи
-- Получать отчёты
-- Работать через Swagger UI
+-   Domain
+-   Application
+-   Infrastructure
+-   WebAPI (REST + Frontend)
 
----
+------------------------------------------------------------------------
 
-* Технологический стек
+# Архитектура проекта
 
-- ASP.NET Core Web API
-- Entity Framework Core
-- SQLite
-- Swagger / OpenAPI
-- xUnit (для unit-тестов)
+## Структура слоёв
 
----
+TaskTracker.Domain - Entities - Enums - Interfaces
 
-* Требования
+TaskTracker.Application - DTOs - Services - Interfaces - Validators
 
-* SDK
-- .NET 8 SDK (или версия, указанная в проекте)
+TaskTracker.Infrastructure - Data - Repositories - Migrations
 
-* IDE (рекомендуется)
-Visual Studio 2022+
+TaskTracker.WebAPI - Controllers - Middleware - wwwroot (Frontend)
 
-* Структура
-TaskTracker/
-	TaskTracker.sln
-	TaskTracker.Domain          → Доменные модели и бизнес-логика
-	TaskTracker.Application     → DTO, сервисы, валидация
-	TaskTracker.Infrastructure  → EF Core, DbContext, репозитории
-	TaskTracker.WebAPI          → Контроллеры, Swagger, запуск API
+## Диаграмма зависимостей
 
-** Инструкция по запуску проекта
-1.Клонировать репозиторий
-git clone https://github.com/dlitop228xZV/TaskTracker
-cd TaskTracker
-2.Применить миграции базы данных
-dotnet ef database update --project TaskTracker.Infrastructure --startup-project TaskTracker.WebAPI
-/* Если EF CLI не установлен:
-dotnet tool install --global dotnet-ef */
-3.Запустить проект
-cd TaskTracker.WebAPI
-dotnet run
+WebAPI\
+↓\
+Application\
+↓\
+Domain\
+↑\
+Infrastructure
 
-* Swagger UI
-http://localhost:5143/swagger
-(не факт что 5143. Ифна с консоли в помощь)
+-   Domain --- бизнес-сущности\
+-   Application --- бизнес-логика\
+-   Infrastructure --- EF Core + БД\
+-   WebAPI --- REST API + Frontend
 
+------------------------------------------------------------------------
 
+# Как запустить проект
 
+## 1. Открыть решение
 
+Открыть файл:
 
+TaskTracker.sln
+
+в Visual Studio.
+
+## 2. Выбрать Startup Project
+
+TaskTracker.WebAPI
+
+## 3. Применить миграции
+
+В Package Manager Console:
+
+Update-Database
+
+## 4. Запустить
+
+Нажать F5.
+
+После запуска открыть:
+
+https://localhost:xxxx/index.html
+
+Swagger:
+
+https://localhost:xxxx/swagger
+
+------------------------------------------------------------------------
+
+# Frontend
+
+Frontend реализован на:
+
+-   HTML5 (семантическая разметка)
+-   CSS3 (Flexbox, Grid, Media Queries)
+-   Vanilla JavaScript (Fetch API)
+
+## Структура
+
+TaskTracker.WebAPI/wwwroot
+
+-   index.html
+-   reports.html
+-   edit.html
+
+css/ - styles.css
+
+js/ - api.js - tasks-page.js - reports-page.js - edit-page.js
+
+## Возможности
+
+-   Создание задачи
+-   Редактирование (модальное окно)
+-   Удаление
+-   Фильтрация
+-   Подсветка Overdue
+-   Отчёты с bar chart
+-   Адаптивный дизайн (mobile \<768px)
+
+------------------------------------------------------------------------
+
+# API Endpoints
+
+## Tasks
+
+GET /api/tasks --- Получить список задач\
+GET /api/tasks/{id} --- Получить задачу\
+POST /api/tasks --- Создать задачу\
+PUT /api/tasks/{id} --- Обновить задачу\
+DELETE /api/tasks/{id} --- Удалить задачу
+
+### Query параметры
+
+/api/tasks?status=New\
+/api/tasks?assigneeId=1\
+/api/tasks?dueAfter=2025-01-01\
+/api/tasks?dueBefore=2025-12-31\
+/api/tasks?tags=1,2
+
+Поддерживаемые статусы:
+
+-   New
+-   InProgress
+-   Done
+-   Overdue
+
+------------------------------------------------------------------------
+
+## Users
+
+GET /api/users
+
+------------------------------------------------------------------------
+
+## Tags
+
+GET /api/tags
+
+------------------------------------------------------------------------
+
+## Reports
+
+GET /api/reports/status-summary\
+GET /api/reports/overdue-by-assignee\
+GET /api/reports/avg-completion-time
+
+------------------------------------------------------------------------
+
+# E2E тестирование (ручное)
+
+Сценарий проверки:
+
+1.  Создать задачу
+2.  Проверить отображение
+3.  Отредактировать
+4.  Изменить статус
+5.  Проверить Overdue
+6.  Применить фильтры
+7.  Перейти в отчёты
+8.  Удалить задачу
+
+Проверено в:
+
+-   Chrome
+
+------------------------------------------------------------------------
+
+# Known Issues
+
+1.  Нет авторизации (все пользователи имеют полный доступ).
+2.  Нет сортировки по колонкам.
+
+------------------------------------------------------------------------
+
+# Технологии
+
+-   .NET 8
+-   ASP.NET Core Web API
+-   Entity Framework Core
+-   SQL Server
+-   HTML5 / CSS3 / JavaScript
+
+------------------------------------------------------------------------
